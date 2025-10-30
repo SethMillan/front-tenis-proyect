@@ -9,7 +9,7 @@ const open_sans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Tenis Campeón",
+  title: "Tenis Sport Lzc",
   description: "Punto de Venta para la tienda tenis Campeón",
 };
 

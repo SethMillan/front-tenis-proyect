@@ -63,48 +63,56 @@ const RegisterForm = () => {
   });
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full">
-      <Form {...form}>
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Correo electronico</FormLabel>
-              <FormControl>
-                <Input placeholder="Escribe el correo electronico" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </Form>
-      <Form {...form}>
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Contraseña</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Escribe tu contraseña"
-                  type="password"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </Form>
-      <Button type="submit" disabled={isLoading}>
-        {isLoading ? "Iniciando Sesión..." : "Iniciar sesion"}
-      </Button>
-      <Button variant={"link"} asChild>
-        <Link href="/auth/register">Registrarse</Link>
-      </Button>
-    </form>
+<form onSubmit={onSubmit} className="flex flex-col gap-4 w-full ">
+  <Form {...form}>
+    <FormField
+      control={form.control}
+      name="email"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel className="text-xs dark:text-[#E0E0E0]">Usuario</FormLabel>
+          <FormControl >
+            <Input className="!text-xs p-5 dark:text-[#777979]" placeholder="Ingresa tu usuario" {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  </Form>
+
+  <Form {...form}>
+    <FormField
+      control={form.control}
+      name="password"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel className="text-xs dark:text-[#E0E0E0] ">Contraseña</FormLabel>
+          <FormControl>
+            <Input className="!text-xs p-5 dark:text-[#777979]" placeholder="Ingresa tu contraseña" type="password" {...field} />
+          </FormControl>
+          <FormMessage />
+          <Link 
+            href="" 
+            className="block text-sm pt-2  hover:underline text-right text-[#3188fd]"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </FormItem>
+      )}
+    />
+  </Form>
+
+  <div className="flex justify-center">
+    <Button
+      className="dark:text-[#333333] !text-xs bg-[#3188fd]  hover:bg-[#72b9fe] px-8 py-3 inline-block"
+      type="submit"
+      disabled={isLoading}
+    >
+      {isLoading ? "Iniciando Sesión..." : "Login"}
+    </Button>
+  </div>
+</form>
+
   );
 };
 
