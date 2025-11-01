@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authService } from "@/feats/auth/auth-service";
+import { toast, ToastContainer } from "react-toastify";
 
 const loginSchema = z.object({
   email: z.email({ message: "El email no es valido" }),
@@ -47,15 +48,49 @@ const RegisterForm = () => {
     try {
       const res = await authService.login(data);
       if (!res.ok) {
-        alert("Credenciales incorrectas");
-        setError("Credenciales incorrectas"); 
+        setError("Usuario o contraseña equivocados"); 
+        toast.error("Usuario o contraseña equivocados", {
+        toastId: "login-error",
+        style: {
+          backgroundColor: "#F87171",
+          color: "#0F0F0F", 
+          fontSize: "16px",
+          height: "45px",
+          minHeight: "45px",
+          maxHeight: "45px",
+      },
+        closeButton: false,
+});
+
         return;
       }
-      alert("Inicio de sesion exitoso");
+        toast.success("Inicio de Sesión Exitoso  : :  Ingresando . . .", {
+        toastId: "login-success",
+        style: {
+          backgroundColor: "#34D399",
+          color: "#0F0F0F",
+          fontSize: "16px",
+          height: "45px",
+          minHeight: "45px",
+          maxHeight: "45px",        },
+        closeButton: false,
+});
       router.push("/home"); 
     } catch (err) {
       setError("Error de conexión: "+err); 
-      alert("Error de conexion");
+              toast.error("Error de conexión", {
+        toastId: "connection-error",
+        style: {
+          backgroundColor: "#F87171",
+          color: "#0F0F0F",
+          fontSize: "16px",
+          height: "45px",
+          minHeight: "45px",
+          maxHeight: "45px",
+      },
+        closeButton: false,
+});
+
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -72,7 +107,7 @@ const RegisterForm = () => {
         <FormItem>
           <FormLabel className="text-xs dark:text-[#E0E0E0]">Usuario</FormLabel>
           <FormControl >
-            <Input className="!text-xs p-5 dark:text-[#777979]" placeholder="Ingresa tu usuario" {...field} />
+            <Input className="!text-sm p-5 dark:text-[#777979] dark:border-none" placeholder="Ingresa tu usuario" {...field} />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -88,7 +123,7 @@ const RegisterForm = () => {
         <FormItem>
           <FormLabel className="text-xs dark:text-[#E0E0E0] ">Contraseña</FormLabel>
           <FormControl>
-            <Input className="!text-xs p-5 dark:text-[#777979]" placeholder="Ingresa tu contraseña" type="password" {...field} />
+            <Input className="!text-sm p-5 dark:text-[#777979] dark:border-none" placeholder="Ingresa tu contraseña" type="password" {...field} />
           </FormControl>
           <FormMessage />
           <Link 
@@ -104,7 +139,7 @@ const RegisterForm = () => {
 
   <div className="flex justify-center">
     <Button
-      className="dark:text-[#333333] !text-xs bg-[#3188fd]  hover:bg-[#72b9fe] px-8 py-3 inline-block"
+      className="dark:text-[#333333] !text-lg bg-[#3188fd]  hover:bg-[#72b9fe] px-8 py-6 "
       type="submit"
       disabled={isLoading}
     >

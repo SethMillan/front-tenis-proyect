@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import "./globals.css";
 
+
+
 const open_sans = Open_Sans({
   weight: ["300", "400"],
   style: ["italic", "normal"],
@@ -20,7 +22,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={open_sans.className}>{children}</body>
+      <body className={open_sans.className}>{children}
+
+
+
+      </body>
     </html>
   );
 }
