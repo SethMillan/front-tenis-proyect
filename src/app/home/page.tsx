@@ -2,7 +2,10 @@ import React from 'react'
 
 const page = () => {
   return (
-    <div>jiji</div>
+    <div>
+      <div className='font-semibold text-[20px]' >DASHBOARD</div>
+      
+    </div>
   )
 }
 
