@@ -30,7 +30,7 @@ const items = [
     },
     {
         title: "Ventas",
-        url: "#",
+        url: "/home/sales",
         icon: DollarSign,
     },
     {
