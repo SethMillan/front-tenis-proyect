@@ -52,7 +52,7 @@ Esta media query es para la preferencia del usuario del color
     --foreground: #ededed;
   }
 } */
-p {
+.default-paragraph {
   font-style: normal;
   font-weight: 400;
   line-height: normal;

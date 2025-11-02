@@ -5,7 +5,7 @@ import "./globals.css";
 
 
 const open_sans = Open_Sans({
-  weight: ["300", "400"],
+  weight: ["300", "400", "500", "600", "700", "800"],
   style: ["italic", "normal"],
   subsets: ["latin"],
 });
@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={open_sans.className}>
       <body className={open_sans.className}>{children}
 
 
