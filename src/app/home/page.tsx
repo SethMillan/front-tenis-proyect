@@ -13,7 +13,7 @@ const FUSE_OPTIONS = {
   threshold: 0.4,
 };
 
-const page = () => {
+const Page = () => {
   const [tenis, setTenis] = useState<Producto[]>([]);
   const [search, setSearch] = useState("");
   useEffect(() => {
@@ -119,4 +119,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;
