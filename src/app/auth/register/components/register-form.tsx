@@ -21,7 +21,7 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { authService } from "@/feats/auth/auth-service";
+import { authService } from "@/features/auth/auth-service";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -78,8 +78,8 @@ const RegisterForm = () => {
       router.push("/auth/login");
     } catch (err) {
       alert("Error de conexion");
-      setError("Error de conexión"+err);
-      console.log(error.toString()); 
+      setError("Error de conexión" + err);
+      console.log(error.toString());
     } finally {
       // * aseguremonos de quitar el loading
       setIsLoading(false);
