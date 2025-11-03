@@ -1,1 +1,1 @@
-export const API_URL = "https://back-tenis-proyect.onrender.com";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL;
