@@ -11,16 +11,13 @@ interface TableSalesProps {
   filters: {
     tipoVenta: string;
     tipoPago: string;
-    minTotal: string;
-    maxTotal: string;
+    dateFrom?: string;
+    dateTo?: string;
   };
-  sortConfig: {
-    key: keyof Venta | "";
-    direction: "asc" | "desc";
-  };
+  sortDirection : ""|"asc"|"desc";
 }
 
-export function TableSales({ searchTerm, filters, sortConfig }: TableSalesProps) {
+export function TableSales({ searchTerm, filters, sortDirection }: TableSalesProps) {
 
   const [sales, setSales] = useState<Venta[]>([]);
   
@@ -39,27 +36,29 @@ export function TableSales({ searchTerm, filters, sortConfig }: TableSalesProps)
     };
   const filteredSales = useFuseSearch(sales, searchTerm, FUSE_OPTIONS)
     .filter(venta => {
-      const matchesTipoVenta = filters.tipoVenta === "todos" || venta.tipo_venta === filters.tipoVenta;
-      const matchesTipoPago = filters.tipoPago === "todos" || venta.tipo_pago === filters.tipoPago;
-      const total = parseFloat(venta.total);
-      const matchesMinTotal = !filters.minTotal || total >= parseFloat(filters.minTotal);
-      const matchesMaxTotal = !filters.maxTotal || total <= parseFloat(filters.maxTotal);
-      
-      return matchesTipoVenta && matchesTipoPago && matchesMinTotal && matchesMaxTotal;
-    })
-    .sort((a, b) => {
-      if (!sortConfig.key) return 0;
-      
-      const aValue = a[sortConfig.key];
-      const bValue = b[sortConfig.key];
-      
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortConfig.direction === 'asc' 
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
+      const matchesTipoVenta = !filters.tipoVenta  || filters.tipoVenta === "todos" || venta.tipo_venta === filters.tipoVenta;
+      const matchesTipoPago = !filters.tipoPago ||  filters.tipoPago === "todos" || venta.tipo_pago === filters.tipoPago;
+       //Filtros por fecha
+       if (filters.dateFrom || filters.dateTo) {
+        const ventaDate = new Date(venta.fecha);
+        if (filters.dateFrom) {
+          const from = new Date(filters.dateFrom + 'T00:00:00');
+          if (ventaDate < from) return false;
+        }
+        if (filters.dateTo) {
+          const to = new Date(filters.dateTo + 'T23:59:59.999');
+          if (ventaDate > to) return false;
+        }
       }
       
-      return 0;
+      return matchesTipoVenta && matchesTipoPago;
+    })
+    .sort((a, b) => {
+      if (!sortDirection) return 0;
+
+      const dateFrom = new Date(a.fecha).getTime();
+      const dateTo = new Date(b.fecha).getTime();
+      return sortDirection === "asc" ? dateFrom - dateTo : dateTo - dateFrom;
     });
     
     useEffect(() =>{

@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { date } from "zod";
 
 
 
@@ -28,22 +29,10 @@ const pageSales = () => {
    const [filters, setFilters] = useState({
      tipoVenta: "",
      tipoPago: "",
-     minTotal: "",
-     maxTotal: "",
+     dateFrom: "",
+     dateTo: "",
    });
-  const [sortConfig, setSortConfig] = useState<{
-    key: keyof Venta | "";
-    direction: "asc" | "desc";
-  }>({
-    key: "",
-    direction: "asc"
-  });
-  const handleSort = (key: keyof Venta) => {
-    setSortConfig(current => ({
-      key,
-      direction: current.key === key && current.direction === "asc" ? "desc" : "asc"
-    }));
-  };
+  const [sortDirection, setSortDirection] = useState<"" | "asc" | "desc">("");
 
   return (
     <>
@@ -101,10 +90,29 @@ const pageSales = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="dateFrom">Fecha desde</label>
+                  <Input
+                    id="dateFrom"
+                    type="date"
+                    value={filters.dateFrom}
+                    onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="dateTo">Fecha hasta</label>
+                  <Input
+                    id="dateTo"
+                    type="date"
+                    value={filters.dateTo}
+                    onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
+                  />
+                </div>
               </div>
-              
           </DialogContent>
         </Dialog>
+
         {/*Boton de ordenar*/}
         <Dialog>
           <DialogTrigger asChild>
@@ -116,22 +124,11 @@ const pageSales = () => {
             <DialogHeader>
               <DialogTitle>Ordenar Ventas</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="flex flex-col gap-1">
-                <label htmlFor="sortBy">Ordenar por</label>
-                <Select
-                  onValueChange={(value) => handleSort(value as keyof Venta)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona el criterio de orden" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="total">Total</SelectItem>
-                    <SelectItem value="tipo_venta">Tipo de Venta</SelectItem>
-                    <SelectItem value="tipo_pago">Tipo de Pago</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid gap-2 py-2">
+              <Button variant={sortDirection === "desc" ? "default" : "outline"} onClick={() => setSortDirection("desc")}>Ventas más recientes</Button>
+              <Button variant={sortDirection === "asc" ? "default" : "outline"} onClick={() => setSortDirection("asc")}>Ventas más antiguas</Button>
+              
+              <Button variant="ghost" onClick={() => setSortDirection("")}>Limpiar</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -139,7 +136,7 @@ const pageSales = () => {
       <TableSales 
           searchTerm={searchTerm} 
           filters={filters}
-          sortConfig={sortConfig}
+          sortDirection={sortDirection}
         />
       </div>
     </>
