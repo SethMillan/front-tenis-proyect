@@ -5,10 +5,30 @@ import {
 import { useEffect,useState } from "react"
 import { API_URL } from "@/features/shared/api-url"
 import { Venta, Cliente, Empleado } from "@/types/types"
+import { useFuseSearch } from "@/hooks/useFuseSearch"
+interface TableSalesProps {
+  searchTerm: string;
+}
 
+export function TableSales({ searchTerm }: TableSalesProps) {
 
-export function TableSales() {
-    const [sales, setSales] = useState<Venta[]>([]);
+  const [sales, setSales] = useState<Venta[]>([]);
+  
+
+  const FUSE_OPTIONS = {
+        keys: [
+            "tipo_venta",
+            "tipo_pago",
+            "clientes.nombres",
+            "clientes.apellido_p",
+            "empleados.nombre",
+            "empleados.apellido_p",
+            "total"
+        ],
+        threshold: 0.4,
+    };
+  const filteredSales = useFuseSearch(sales, searchTerm, FUSE_OPTIONS);
+    
     useEffect(() =>{
         async function fetchSalesData(){
             try{
@@ -22,6 +42,7 @@ export function TableSales() {
         }
         fetchSalesData();
     },[]);
+
   function formatDate(dateString:string) {
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, '0');
@@ -32,14 +53,12 @@ export function TableSales() {
   }
    const formatFullName = (person?: Cliente | Empleado | null) => {
       if (!person) return 'N/A';
-      // clientes usan 'nombres', empleados usan 'nombre'
+      // Esta mal pero asi desde la bd, entonces veremos como lo cambiamos
       const first = ('nombres' in person) ? (person as Cliente).nombres : (person as Empleado).nombre;
       const apellidoP = person.apellido_p ?? '';
       const apellidoM = person.apellido_m ?? '';
       return `${first} ${apellidoP} ${apellidoM}`.trim();
     };
-
-
 
   return (
     <Table>
@@ -55,7 +74,7 @@ export function TableSales() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {sales.map((venta: any) => (
+        {filteredSales.map((venta: any) => (
           <TableRow key={venta.id}>
             <TableCell>{venta.id}</TableCell>
             <TableCell>{formatDate(venta.fecha)}</TableCell>

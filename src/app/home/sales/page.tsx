@@ -1,17 +1,23 @@
+"use client"
 import { Button } from "@/components/ui/button";
 import { Filter, List, Search } from "lucide-react";
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { TableSales} from "../../../components/TableSales";
+import { useState } from "react";
 
 const pageSales = () => {
+   const [searchTerm, setSearchTerm] = useState("");
   return (
     <>
       <div className="pt-1 h-full w-full flex flex-col gap-10 justify-center items-start m-8">
         <h1 className="text-2xl font-bold">Ventas</h1>
         <div className="flex items-center gap-2">
         <div className="relative flex-1 w-lvh">
-           <Input placeholder="Buscar productos" className="pl-10" />
+           <Input 
+            placeholder="Buscar ventas"
+            className="pl-10"
+            onChange={(e) => setSearchTerm(e.target.value)} />
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /> 
         </div>
         <Button variant="outline" className="flex items-center gap-2">
@@ -21,7 +27,7 @@ const pageSales = () => {
           <List className="h-4 w-4" /> Ordenar
         </Button>
       </div>
-      <TableSales />
+      <TableSales searchTerm={searchTerm} />
 
       </div>
     </>
