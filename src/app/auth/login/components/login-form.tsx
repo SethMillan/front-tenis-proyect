@@ -107,7 +107,7 @@ const RegisterForm = () => {
         <FormItem>
           <FormLabel className="text-xs dark:text-[#E0E0E0]">Usuario</FormLabel>
           <FormControl >
-            <Input className="!text-sm p-5 dark:text-[#777979] dark:border-none" placeholder="Ingresa tu usuario" {...field} />
+            <Input className="!text-sm p-5 dark:text-[#E0E0E0] dark:border-none dark:placeholder-[#E0E0E0]" placeholder="Ingresa tu usuario" {...field} />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -123,12 +123,12 @@ const RegisterForm = () => {
         <FormItem>
           <FormLabel className="text-xs dark:text-[#E0E0E0] ">Contraseña</FormLabel>
           <FormControl>
-            <Input className="!text-sm p-5 dark:text-[#777979] dark:border-none" placeholder="Ingresa tu contraseña" type="password" {...field} />
+            <Input className="!text-sm p-5 dark:placeholder-[#E0E0E0] dark:text-[#E0E0E0] dark:border-none" placeholder="Ingresa tu contraseña" type="password" {...field} />
           </FormControl>
           <FormMessage />
           <Link 
             href="" 
-            className="block text-sm pt-2  hover:underline text-right text-[#3188fd]"
+            className="block text-sm pt-2  underline text-right !text-[#51a0fe] "
           >
             ¿Olvidaste tu contraseña?
           </Link>
@@ -139,11 +139,11 @@ const RegisterForm = () => {
 
   <div className="flex justify-center">
     <Button
-      className="dark:text-[#333333] !text-lg bg-[#3188fd]  hover:bg-[#72b9fe] px-8 py-6 "
+      className="dark:text-[#FFFFFF] !text-base bg-[#3188fd]  hover:bg-[#72b9fe] px-8 py-6 cursor-pointer"
       type="submit"
       disabled={isLoading}
     >
-      {isLoading ? "Iniciando Sesión..." : "Login"}
+      {isLoading ? "Iniciando Sesión..." : "Iniciar Sesión"}
     </Button>
   </div>
 </form>
