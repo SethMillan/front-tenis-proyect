@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Filter, List, Search } from "lucide-react";
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { TableSales} from "@/app/components/TableSales";
+import { TableSales} from "../../../components/TableSales";
 
 const pageSales = () => {
   return (
