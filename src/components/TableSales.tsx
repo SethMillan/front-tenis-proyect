@@ -3,14 +3,14 @@ import {
   Table,TableBody,TableCaption,TableCell,TableHead,TableHeader,TableRow,
 } from "@/components/ui/table"
 import { useEffect,useState } from "react"
+import { API_URL } from "@/features/shared/api-url"
 
 export function TableSales() {
     const [sales, setSales] = useState([]);
     useEffect(() =>{
         async function fetchSalesData(){
             try{
-                const response = await fetch("https://back-tenis-proyect.onrender.com/ventas");
-                //const response = await fetch(`${API_URL}/ventas`);
+                const response = await fetch(`${API_URL}/ventas`);
                 const data = await response.json();
                 console.log("Fetched sales data:", data);
                 setSales(data);
