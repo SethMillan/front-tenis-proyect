@@ -10,6 +10,7 @@ export function TableSales() {
         async function fetchSalesData(){
             try{
                 const response = await fetch("https://back-tenis-proyect.onrender.com/ventas");
+                //const response = await fetch(`${API_URL}/ventas`);
                 const data = await response.json();
                 console.log("Fetched sales data:", data);
                 setSales(data);
@@ -19,6 +20,14 @@ export function TableSales() {
         }
         fetchSalesData();
     },[]);
+    function formatDate(dateString:string) {
+  const date = new Date(dateString);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  
+  return `${day}/${month}/${year}`;
+}
 
 
   return (
@@ -38,7 +47,7 @@ export function TableSales() {
         {sales.map((venta: any) => (
           <TableRow key={venta.id}>
             <TableCell>{venta.id}</TableCell>
-            <TableCell>{venta.fecha}</TableCell>
+            <TableCell>{formatDate(venta.fecha)}</TableCell>
             <TableCell>{venta.tipo_pago}</TableCell>
             <TableCell>{venta.total}</TableCell>
             <TableCell>{venta.clientes.nombres}</TableCell>
