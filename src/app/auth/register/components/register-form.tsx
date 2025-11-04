@@ -69,22 +69,22 @@ const RegisterForm = () => {
       const res = await authService.register(payload);
       if (!res.ok) {
         setError("Error al registrar el usuario");
-                toast.error("Correo electrónico ya registrado", {
-        toastId: "register-error",
-        style: {
-          backgroundColor: "#F87171",
-          color: "#0F0F0F", 
-          fontSize: "16px",
-          height: "45px",
-          minHeight: "45px",
-          maxHeight: "45px",
-      },
-        closeButton: false,
-});
+        toast.error("Correo electrónico ya registrado", {
+          toastId: "register-error",
+          style: {
+            backgroundColor: "#F87171",
+            color: "#0F0F0F",
+            fontSize: "16px",
+            height: "45px",
+            minHeight: "45px",
+            maxHeight: "45px",
+          },
+          closeButton: false,
+        });
         return;
       }
       form.reset();
-        toast.success("Usuario registrado correctamente", {
+      toast.success("Usuario registrado correctamente", {
         toastId: "register-success",
         style: {
           backgroundColor: "#34D399",
@@ -92,9 +92,10 @@ const RegisterForm = () => {
           fontSize: "16px",
           height: "45px",
           minHeight: "45px",
-          maxHeight: "45px",        },
+          maxHeight: "45px",
+        },
         closeButton: false,
-});
+      });
       router.push("/auth/login");
     } catch (err) {
       setError("Error de conexión: " + String(err));
@@ -107,9 +108,9 @@ const RegisterForm = () => {
           height: "45px",
           minHeight: "45px",
           maxHeight: "45px",
-      },
+        },
         closeButton: false,
-});
+      });
       console.log(String(err));
     } finally {
       setIsLoading(false);
@@ -250,32 +251,58 @@ const RegisterForm = () => {
           name="rol"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs dark:text-[#E0E0E0]">Rol del empleado</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger
-                    className="
-                      !text-sm px-5 py-3
-                      dark:text-[#E0E0E0] dark:border-none
-                      [&>[data-placeholder]]:text-gray-400
-                      dark:[&>[data-placeholder]]:text-[#E0E0E0]
-                    "
-                  >
-                    <SelectValue placeholder="Selecciona un rol" />
-                  </SelectTrigger>
-                </FormControl>
+  <FormLabel className="text-xs dark:text-[#E0E0E0]">
+    Rol del empleado
+  </FormLabel>
+  <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <FormControl>
+      <SelectTrigger
+        className="
+          !text-sm p-5
+          dark:text-[#E0E0E0]
+          dark:placeholder-[#E0E0E0]
+          dark:border-none
+          dark:bg-[#3A3A3A]
+          bg-[#F3F3F3]
+          rounded-md
+          focus:ring-0 focus:outline-none
+          [&>[data-placeholder]]:text-gray-400
+          dark:[&>[data-placeholder]]:text-[#E0E0E0]
+        "
+      >
+        <SelectValue placeholder="Selecciona un rol" />
+      </SelectTrigger>
+    </FormControl>
 
-                <SelectContent className="!text-sm dark:text-[#E0E0E0] dark:border-none">
-                  <SelectItem className="!text-sm px-5 py-2 dark:text-[#E0E0E0]" value="Admin">
-                    Administrador
-                  </SelectItem>
-                  <SelectItem className="!text-sm px-5 py-2 dark:text-[#E0E0E0]" value="Employee">
-                    Empleado
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
+    <SelectContent
+      className="
+        !text-sm 
+        dark:text-[#E0E0E0]
+        dark:bg-[#2B2B2B]
+        bg-[#F3F3F3]
+        dark:border-none
+        rounded-md
+        shadow-md
+      "
+    >
+      <SelectItem
+        className="!text-sm px-5 py-3 dark:text-[#E0E0E0] dark:hover:bg-[#3A3A3A]"
+        value="Admin"
+      >
+        Administrador
+      </SelectItem>
+      <SelectItem
+        className="!text-sm px-5 py-3 dark:text-[#E0E0E0] dark:hover:bg-[#3A3A3A]"
+        value="Employee"
+      >
+        Empleado
+      </SelectItem>
+    </SelectContent>
+  </Select>
+  <FormMessage />
+</FormItem>
+
+
           )}
         />
       </Form>
