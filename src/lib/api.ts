@@ -15,3 +15,15 @@ async function apiRequest(endpoint :string){
 export async function fetchTenis(){
     return apiRequest('/productos');
 }
+
+export async function fetchByTenisId(id: string){
+    return apiRequest('/productos/'+id);
+}
+
+export async function fetchMarcas(){
+    return apiRequest('/marcas');
+}
+
+export async function fetchCategorias(){
+    return apiRequest('/categorias');
+}

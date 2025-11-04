@@ -35,7 +35,7 @@ const items = [
     },
     {
         title: "Productos",
-        url: "#",
+        url: "/home/products",
         icon: Box,
     },
     {
