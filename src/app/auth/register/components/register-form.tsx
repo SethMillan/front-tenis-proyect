@@ -262,7 +262,6 @@ const RegisterForm = () => {
           dark:text-[#E0E0E0]
           dark:placeholder-[#E0E0E0]
           dark:border-none
-          dark:bg-[#3A3A3A]
           bg-[#F3F3F3]
           rounded-md
           focus:ring-0 focus:outline-none
@@ -286,13 +285,13 @@ const RegisterForm = () => {
       "
     >
       <SelectItem
-        className="!text-sm px-5 py-3 dark:text-[#E0E0E0] dark:hover:bg-[#3A3A3A]"
+        className="!text-sm px-5 py-3 dark:text-[#E0E0E0] "
         value="Admin"
       >
         Administrador
       </SelectItem>
       <SelectItem
-        className="!text-sm px-5 py-3 dark:text-[#E0E0E0] dark:hover:bg-[#3A3A3A]"
+        className="!text-sm px-5 py-3 dark:text-[#E0E0E0] "
         value="Employee"
       >
         Empleado
