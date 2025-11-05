@@ -262,7 +262,7 @@ const RegisterForm = () => {
           dark:text-[#E0E0E0]
           dark:placeholder-[#E0E0E0]
           dark:border-none
-          bg-[#F3F3F3]
+          text-[#6B7280]  
           rounded-md
           focus:ring-0 focus:outline-none
           [&>[data-placeholder]]:text-gray-400
@@ -291,7 +291,7 @@ const RegisterForm = () => {
         Administrador
       </SelectItem>
       <SelectItem
-        className="!text-sm px-5 py-3 dark:text-[#E0E0E0] "
+        className="!text-sm px-5 py-3 dark:text-[#E0E0E0]  "
         value="Employee"
       >
         Empleado
