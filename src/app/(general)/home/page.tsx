@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import CardTenis from "../../components/CardTenis";
+import CardTenis from "../../../components/CardTenis";
 import { Input } from "@/components/ui/input";
 import { useFuseSearch } from "@/hooks/useFuseSearch";
 import { fetchTenis } from "@/lib/api";

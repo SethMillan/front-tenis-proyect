@@ -1,0 +1,1 @@
+export  { TableSales } from "./TableSales";
