@@ -45,7 +45,7 @@ const items = [
     },
     {
         title: "Empleados",
-        url: "#",
+        url: "/employees",
         icon: User,
     },
     {
@@ -66,7 +66,7 @@ export function AppSidebar() {
                         <Star className="h-5 w-5" />
                     </div>
                     <div>
-                        <p className="text-base font-semibold">Tenis <span className="font-medium">El campeón</span></p>
+                        <p className="text-base font-semibold">Tenis <span className="font-medium">Sport LZC</span></p>
                         <p className="text-xs text-slate-500">Punto de venta</p>
                     </div>
                 </div>
