@@ -47,7 +47,6 @@ export function TableEmployees({
     `${API_URL}/empleados`
   );
 
-  // 🔥 ELIMINAR DUPLICADOS
   const uniqueEmployees = useMemo(() => {
     if (!employees) return [];
     const map = new Map<number, Empleado>();
