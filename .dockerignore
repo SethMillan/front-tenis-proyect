@@ -1,0 +1,39 @@
+# Node modules
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Logs
+*.log
+logs
+
+# Output of Next.js
+.next
+out
+
+# Environment files
+.env
+.env*.local
+
+# System files
+.DS_Store
+*.swp
+
+# Git
+.git
+.gitignore
+
+# Editor directories and files
+.vscode
+.idea
+*.iml
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+
+# Optional: files of OS or generated
+dist
+tmp
