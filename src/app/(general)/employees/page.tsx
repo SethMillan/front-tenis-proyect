@@ -5,6 +5,8 @@ import { Filter, Search } from "lucide-react";
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { TableEmployees } from "@/components/index";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import {
     Dialog,
@@ -151,6 +153,21 @@ const PageEmployees = () => {
                     sortDirection={sortDirection}
                 />
             </div>
+            <ToastContainer
+                position="bottom-right"
+                autoClose={4000}
+                hideProgressBar={true}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                limit={1}
+                style={{
+                    width: "clamp(280px, 90vw, 451px)",
+                }}
+            />
         </>
     );
 };

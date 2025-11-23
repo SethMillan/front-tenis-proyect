@@ -122,7 +122,6 @@ const RegisterForm = () => {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full">
       <Form {...form}>
-
         <FormField
           control={form.control}
           name="nombre"
@@ -199,59 +198,52 @@ const RegisterForm = () => {
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs dark:text-[#E0E0E0]">Contraseña</FormLabel>
+              <FormControl>
+                <Input
+                  className="!text-sm p-5 dark:placeholder-[#E0E0E0] dark:text-[#E0E0E0] dark:border-none"
+                  placeholder="Contraseña"
+                  type="password"
+                  autoComplete="new-password"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs dark:text-[#E0E0E0]">Contraseña</FormLabel>
-                <FormControl>
-                  <Input
-                    className="!text-sm p-5 dark:placeholder-[#E0E0E0] dark:text-[#E0E0E0] dark:border-none"
-                    placeholder="Contraseña"
-                    type="password"
-                    autoComplete="new-password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="confirm_password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs dark:text-[#E0E0E0]">Confirmar contraseña</FormLabel>
-                <FormControl>
-                  <Input
-                    className="!text-sm p-5 dark:placeholder-[#E0E0E0] dark:text-[#E0E0E0] dark:border-none"
-                    placeholder="Confirmar contraseña"
-                    type="password"
-                    autoComplete="new-password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-        </div>
+        <FormField
+          control={form.control}
+          name="confirm_password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs dark:text-[#E0E0E0]">Confirmar contraseña</FormLabel>
+              <FormControl>
+                <Input
+                  className="!text-sm p-5 dark:placeholder-[#E0E0E0] dark:text-[#E0E0E0] dark:border-none"
+                  placeholder="Confirmar contraseña"
+                  type="password"
+                  autoComplete="new-password"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
           name="rol"
           render={({ field }) => (
             <FormItem className="mt-2">
-              <FormLabel className="text-xs dark:text-[#E0E0E0]">
-                Rol del empleado
-              </FormLabel>
-
+              <FormLabel className="text-xs dark:text-[#E0E0E0]">Rol del empleado</FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
@@ -262,22 +254,16 @@ const RegisterForm = () => {
                     <RadioGroupItem value="Admin" />
                     <span className="text-sm dark:text-[#E0E0E0]">Administrador</span>
                   </label>
-
                   <label className="flex items-center gap-2 cursor-pointer">
                     <RadioGroupItem value="Employee" />
                     <span className="text-sm dark:text-[#E0E0E0]">Empleado</span>
                   </label>
                 </RadioGroup>
               </FormControl>
-
               <FormMessage />
             </FormItem>
           )}
         />
-
-
-
-
       </Form>
 
       <div className="flex justify-center">
@@ -291,11 +277,15 @@ const RegisterForm = () => {
       </div>
 
       <Button variant={"link"} asChild>
-        <Link className="block text-sm pt-2 underline text-right !text-[#51a0fe]" href="/auth/login">
+        <Link
+          className="block text-sm pt-2 underline text-right !text-[#51a0fe]"
+          href="/auth/login"
+        >
           Iniciar sesión
         </Link>
       </Button>
     </form>
+
 
 
 
