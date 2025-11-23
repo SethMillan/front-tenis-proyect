@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import "./globals.css";
+import { Providers } from './providers';
 
 
 
@@ -22,10 +23,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={open_sans.className}>
-      <body className={open_sans.className}>{children}
-
-
-
+      <body className={open_sans.className}>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );
