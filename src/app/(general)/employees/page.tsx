@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Filter, Search } from "lucide-react";
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { TableEmployees } from "@/components/index";
+import { TableEmployees } from "@/components";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -25,17 +25,16 @@ import {
 } from "@/components/ui/select";
 
 const PageEmployees = () => {
-    // Buscador
     const [searchTerm, setSearchTerm] = useState("");
 
-    // Filtros
     const [filters, setFilters] = useState({
         rol: "",
         activo: "",
     });
 
-    // Orden asc/desc por fecha de creación
-    const [sortDirection, setSortDirection] = useState<"" | "asc" | "desc">("");
+    const [sortDirection, setSortDirection] = useState<
+        "" | "asc" | "desc"
+    >("");
 
     return (
         <>
@@ -67,7 +66,7 @@ const PageEmployees = () => {
                             </DialogHeader>
 
                             <div className="grid gap-4 py-4">
-                                {/* FILTRO POR ROL */}
+                                {/* FILTRO ROL */}
                                 <div className="flex flex-col gap-1">
                                     <label>Rol</label>
                                     <Select
@@ -87,7 +86,7 @@ const PageEmployees = () => {
                                     </Select>
                                 </div>
 
-                                {/* FILTRO POR ACTIVO */}
+                                {/* FILTRO ACTIVO */}
                                 <div className="flex flex-col gap-1">
                                     <label>Estado</label>
                                     <Select
@@ -146,27 +145,19 @@ const PageEmployees = () => {
                     </Dialog>
                 </div>
 
-                {/* TABLA DE EMPLEADOS */}
+                {/* TABLA */}
                 <TableEmployees
                     searchTerm={searchTerm}
                     filters={filters}
                     sortDirection={sortDirection}
                 />
             </div>
+
             <ToastContainer
                 position="bottom-right"
                 autoClose={4000}
-                hideProgressBar={true}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
+                hideProgressBar
                 limit={1}
-                style={{
-                    width: "clamp(280px, 90vw, 451px)",
-                }}
             />
         </>
     );

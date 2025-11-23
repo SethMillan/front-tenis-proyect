@@ -13,7 +13,7 @@ const open_sans = Open_Sans({
 
 export const metadata: Metadata = {
   title: "Tenis Sport Lzc",
-  description: "Punto de Venta para la tienda tenis Campeón",
+  description: "Punto de Venta para la tienda Tenis Sport Lzc",
 };
 
 export default function RootLayout({

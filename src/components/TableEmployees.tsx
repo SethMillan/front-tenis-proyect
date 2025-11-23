@@ -8,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect, useState } from "react";
 import { API_URL } from "@/features/shared/api-url";
 import { Empleado } from "@/types/types";
 import { useFuseSearch } from "@/hooks/useFuseSearch";
@@ -24,6 +23,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import useSWR from "swr";
+import { useState, useMemo } from "react";
 
 interface TableEmployeesProps {
   searchTerm: string;
@@ -39,52 +40,62 @@ export function TableEmployees({
   filters,
   sortDirection,
 }: TableEmployeesProps) {
-  const [employees, setEmployees] = useState<Empleado[]>([]);
-  const [selectedEmployee, setSelectedEmployee] = useState<Empleado | null>(null);
   const [editData, setEditData] = useState<Empleado | null>(null);
   const [openModal, setOpenModal] = useState(false);
 
-  const FUSE_OPTIONS = {
-    keys: ["nombre", "apellido_p", "apellido_m", "rol", "telefono", "email"],
-    threshold: 0.4,
-  };
+  const { data: employees, error, isLoading } = useSWR<Empleado[]>(
+    `${API_URL}/empleados`
+  );
 
-  const filteredEmployees = useFuseSearch(employees, searchTerm, FUSE_OPTIONS)
-    .filter((emp) => {
-      const matchesRol =
-        !filters.rol || filters.rol === "todos" || emp.rol === filters.rol;
+  // 🔥 ELIMINAR DUPLICADOS
+  const uniqueEmployees = useMemo(() => {
+    if (!employees) return [];
+    const map = new Map<number, Empleado>();
+    employees.forEach((emp) => map.set(emp.id, emp));
+    return Array.from(map.values());
+  }, [employees]);
 
-      const matchesActivo =
-        !filters.activo ||
-        filters.activo === "todos" ||
-        (filters.activo === "activos" && emp.activo) ||
-        (filters.activo === "inactivos" && !emp.activo);
+  const FUSE_OPTIONS = useMemo(
+    () => ({
+      keys: ["nombre", "apellido_p", "apellido_m", "rol", "telefono", "email"],
+      threshold: 0.4,
+    }),
+    []
+  );
 
-      return matchesRol && matchesActivo;
-    })
-    .sort((a, b) => {
-      if (!sortDirection) return 0;
-      const dateA = new Date(a.created_at ?? "").getTime();
-      const dateB = new Date(b.created_at ?? "").getTime();
-      return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
-    });
+  const filteredEmployees = useFuseSearch(
+    uniqueEmployees,
+    searchTerm,
+    FUSE_OPTIONS
+  );
 
-  useEffect(() => {
-    async function fetchEmployees() {
-      try {
-        const response = await fetch(`${API_URL}/empleados`);
-        const data: Empleado[] = await response.json();
-        setEmployees(data);
-      } catch (error) {
-        console.error("Error fetching employee data:", error);
-      }
-    }
-    fetchEmployees();
-  }, []);
+  // FILTRO POR ROL
+  const filteredByRol =
+    filters.rol && filters.rol !== "todos"
+      ? filteredEmployees.filter((e) => e.rol === filters.rol)
+      : filteredEmployees;
+
+  // FILTRO POR ESTADO
+  const filteredByEstado =
+    filters.activo === "activos"
+      ? filteredByRol.filter((e) => e.activo === true)
+      : filters.activo === "inactivos"
+        ? filteredByRol.filter((e) => e.activo === false)
+        : filteredByRol;
+
+  // ORDENAR POR FECHA
+  const sortedEmployees = [...filteredByEstado].sort((a, b) => {
+    if (!sortDirection) return 0;
+    const da = new Date(a.created_at).getTime();
+    const db = new Date(b.created_at).getTime();
+    return sortDirection === "asc" ? da - db : db - da;
+  });
+
+  if (isLoading) return <p className="p-4">Cargando empleados...</p>;
+  if (error) return <p className="p-4 text-red-600">Error al cargar datos</p>;
 
   const openEditModal = (emp: Empleado) => {
-    setSelectedEmployee(emp);
-    setEditData({ ...emp }); // Copia editable
+    setEditData({ ...emp });
     setOpenModal(true);
   };
 
@@ -111,7 +122,7 @@ export function TableEmployees({
         </TableHeader>
 
         <TableBody>
-          {filteredEmployees.map((emp) => (
+          {sortedEmployees.map((emp) => (
             <TableRow key={emp.id}>
               <TableCell>{emp.id}</TableCell>
               <TableCell>
@@ -128,6 +139,7 @@ export function TableEmployees({
                 )}
               </TableCell>
               <TableCell>{formatDate(emp.created_at as any)}</TableCell>
+
               <TableCell className="text-center">
                 <button
                   onClick={() => openEditModal(emp)}
@@ -141,7 +153,6 @@ export function TableEmployees({
         </TableBody>
       </Table>
 
-      {/* MODAL EDITABLE */}
       <Dialog open={openModal} onOpenChange={setOpenModal}>
         <DialogContent>
           <DialogHeader>
