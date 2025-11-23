@@ -40,7 +40,7 @@ const items = [
     },
     {
         title: "Clientes",
-        url: "#",
+        url: "/customers",
         icon: Users,
     },
     {
