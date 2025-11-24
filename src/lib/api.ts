@@ -35,3 +35,7 @@ export async function fetchEmpleados(){
 export async function fetchClientes(){
     return apiRequest('/clientes');
 }  
+  
+export async function fetchSales(){
+    return apiRequest('/ventas');
+}

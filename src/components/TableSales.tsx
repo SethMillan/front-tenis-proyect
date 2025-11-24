@@ -2,10 +2,10 @@
 import {
   Table,TableBody,TableCell,TableHead,TableHeader,TableRow,
 } from "@/components/ui/table"
-import { useEffect,useState } from "react"
-import { API_URL } from "@/features/shared/api-url"
 import { Venta, Cliente, Empleado } from "@/types/types"
 import { useFuseSearch } from "@/hooks/useFuseSearch"
+import { useSales } from "@/hooks/useAPI"
+import { Loader2 } from "lucide-react"
 interface TableSalesProps {
  searchTerm: string;
   filters: {
@@ -19,8 +19,7 @@ interface TableSalesProps {
 
 export function TableSales({ searchTerm, filters, sortDirection }: TableSalesProps) {
 
-  const [sales, setSales] = useState<Venta[]>([]);
-  
+  const { ventas = [], isLoading, isError } = useSales();
 
   const FUSE_OPTIONS = {
         keys: [
@@ -34,7 +33,7 @@ export function TableSales({ searchTerm, filters, sortDirection }: TableSalesPro
         ],
         threshold: 0.4,
     };
-  const filteredSales = useFuseSearch(sales, searchTerm, FUSE_OPTIONS)
+  const filteredSales = useFuseSearch(ventas, searchTerm, FUSE_OPTIONS)
     .filter(venta => {
       const matchesTipoVenta = !filters.tipoVenta  || filters.tipoVenta === "todos" || venta.tipo_venta === filters.tipoVenta;
       const matchesTipoPago = !filters.tipoPago ||  filters.tipoPago === "todos" || venta.tipo_pago === filters.tipoPago;
@@ -55,25 +54,28 @@ export function TableSales({ searchTerm, filters, sortDirection }: TableSalesPro
     })
     .sort((a, b) => {
       if (!sortDirection) return 0;
-
       const dateFrom = new Date(a.fecha).getTime();
       const dateTo = new Date(b.fecha).getTime();
       return sortDirection === "asc" ? dateFrom - dateTo : dateTo - dateFrom;
     });
-    
-    useEffect(() =>{
-        async function fetchSalesData(){
-            try{
-                const response = await fetch(`${API_URL}/ventas`);
-                const data: Venta[] = await response.json();
-                console.log("Fetched sales data:", data);
-                setSales(data);
-            }catch (error) {
-                console.error("Error fetching sales data:", error);
-            }
-        }
-        fetchSalesData();
-    },[]);
+
+  // Estados de carga y error
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-8 w-full">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <span className="ml-2">Cargando ventas...</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex justify-center items-center py-8 w-full text-red-500">
+        <p>Error al cargar las ventas</p>
+      </div>
+    );
+  }
 
   function formatDate(dateString:string) {
     const date = new Date(dateString);
@@ -106,17 +108,25 @@ export function TableSales({ searchTerm, filters, sortDirection }: TableSalesPro
         </TableRow>
       </TableHeader>
       <TableBody>
-        {filteredSales.map((venta: any) => (
-          <TableRow key={venta.id}>
-            <TableCell>{venta.id}</TableCell>
-            <TableCell>{formatDate(venta.fecha)}</TableCell>
-            <TableCell>{venta.tipo_pago}</TableCell>
-            <TableCell>{venta.tipo_venta}</TableCell>
-            <TableCell>{formatFullName(venta.clientes)}</TableCell>
-            <TableCell>{formatFullName(venta.empleados)}</TableCell>
-            <TableCell>${venta.total}</TableCell>
+        {filteredSales.length > 0 ? (
+          filteredSales.map((venta) => (
+            <TableRow key={venta.id}>
+              <TableCell>{venta.id}</TableCell>
+              <TableCell>{formatDate(venta.fecha)}</TableCell>
+              <TableCell>{venta.tipo_pago}</TableCell>
+              <TableCell>{venta.tipo_venta}</TableCell>
+              <TableCell>{formatFullName(venta.clientes)}</TableCell>
+              <TableCell>{formatFullName(venta.empleados)}</TableCell>
+              <TableCell>${venta.total}</TableCell>
+            </TableRow>
+          ))
+        ) : (
+          <TableRow>
+            <TableCell colSpan={7} className="text-center py-4 text-gray-500">
+              No se encontraron ventas
+            </TableCell>
           </TableRow>
-        ))}
+        )}
       </TableBody>
     </Table>
   )

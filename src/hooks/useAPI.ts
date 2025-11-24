@@ -2,7 +2,7 @@
 
 import useSWR from 'swr';
 // aqui traigan las funciones de fetch que 
-import { fetchTenis, fetchByTenisId, fetchEmpleados, fetchClientes, fetchCategorias, fetchMarcas } from '@/lib/api';
+import { fetchTenis, fetchByTenisId, fetchEmpleados, fetchClientes, fetchCategorias, fetchMarcas,fetchSales } from '@/lib/api';
 
 export function useTenis() {
   const { data, error, isLoading, mutate } = useSWR('/productos', fetchTenis);
@@ -33,4 +33,8 @@ export function useMarcas() {
 export function useCategorias() {
   const { data, error, isLoading } = useSWR('/categorias', fetchCategorias);
   return { categorias: data, isLoading, isError: error };
+}
+export function useSales() {
+  const { data, error, isLoading } = useSWR('/ventas', fetchSales);
+  return { ventas: data, isLoading, isError: error };
 }
