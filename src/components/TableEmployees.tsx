@@ -8,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { API_URL } from "@/features/shared/api-url";
 import { Empleado } from "@/types/types";
 import { useFuseSearch } from "@/hooks/useFuseSearch";
 import { Pencil } from "lucide-react";
@@ -23,8 +22,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import useSWR from "swr";
 import { useState, useMemo } from "react";
+import { useEmpleados } from "@/hooks/useAPI";
 
 interface TableEmployeesProps {
   searchTerm: string;
@@ -43,16 +42,14 @@ export function TableEmployees({
   const [editData, setEditData] = useState<Empleado | null>(null);
   const [openModal, setOpenModal] = useState(false);
 
-  const { data: employees, error, isLoading } = useSWR<Empleado[]>(
-    `${API_URL}/empleados`
-  );
+  const { empleados, isLoading, isError } = useEmpleados();
 
   const uniqueEmployees = useMemo(() => {
-    if (!employees) return [];
+    if (!empleados) return [];
     const map = new Map<number, Empleado>();
-    employees.forEach((emp) => map.set(emp.id, emp));
+    empleados.forEach((emp) => map.set(emp.id, emp));
     return Array.from(map.values());
-  }, [employees]);
+  }, [empleados]);
 
   const FUSE_OPTIONS = useMemo(
     () => ({
@@ -62,27 +59,20 @@ export function TableEmployees({
     []
   );
 
-  const filteredEmployees = useFuseSearch(
-    uniqueEmployees,
-    searchTerm,
-    FUSE_OPTIONS
-  );
+  const filteredEmployees = useFuseSearch(uniqueEmployees, searchTerm, FUSE_OPTIONS);
 
-  // FILTRO POR ROL
   const filteredByRol =
     filters.rol && filters.rol !== "todos"
       ? filteredEmployees.filter((e) => e.rol === filters.rol)
       : filteredEmployees;
 
-  // FILTRO POR ESTADO
   const filteredByEstado =
     filters.activo === "activos"
       ? filteredByRol.filter((e) => e.activo === true)
       : filters.activo === "inactivos"
-        ? filteredByRol.filter((e) => e.activo === false)
-        : filteredByRol;
+      ? filteredByRol.filter((e) => e.activo === false)
+      : filteredByRol;
 
-  // ORDENAR POR FECHA
   const sortedEmployees = [...filteredByEstado].sort((a, b) => {
     if (!sortDirection) return 0;
     const da = new Date(a.created_at).getTime();
@@ -91,7 +81,7 @@ export function TableEmployees({
   });
 
   if (isLoading) return <p className="p-4">Cargando empleados...</p>;
-  if (error) return <p className="p-4 text-red-600">Error al cargar datos</p>;
+  if (isError) return <p className="p-4 text-red-600">Error al cargar datos</p>;
 
   const openEditModal = (emp: Empleado) => {
     setEditData({ ...emp });
@@ -100,8 +90,7 @@ export function TableEmployees({
 
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "—";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("es-MX");
+    return new Date(dateString).toLocaleDateString("es-MX");
   };
 
   return (
@@ -138,7 +127,6 @@ export function TableEmployees({
                 )}
               </TableCell>
               <TableCell>{formatDate(emp.created_at as any)}</TableCell>
-
               <TableCell className="text-center">
                 <button
                   onClick={() => openEditModal(emp)}

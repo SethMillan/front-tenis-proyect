@@ -27,3 +27,11 @@ export async function fetchMarcas(){
 export async function fetchCategorias(){
     return apiRequest('/categorias');
 }
+
+export async function fetchEmpleados(){
+    return apiRequest('/empleados');
+}
+
+export async function fetchClientes(){
+    return apiRequest('/clientes');
+}  

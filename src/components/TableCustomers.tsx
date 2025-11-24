@@ -8,7 +8,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { API_URL } from "@/features/shared/api-url";
 import { Customer } from "@/types/types";
 import { useFuseSearch } from "@/hooks/useFuseSearch";
 import { Pencil } from "lucide-react";
@@ -23,8 +22,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import useSWR from "swr";
 import { useState, useMemo } from "react";
+import { useClientes } from "@/hooks/useAPI"; 
 
 interface TableCustomersProps {
     searchTerm: string;
@@ -42,16 +41,14 @@ export function TableCustomers({
     const [editData, setEditData] = useState<Customer | null>(null);
     const [openModal, setOpenModal] = useState(false);
 
-    const { data: customers, error, isLoading } = useSWR<Customer[]>(
-        `${API_URL}/clientes`
-    );
+    const { clientes, isLoading, isError } = useClientes();
 
     const uniqueCustomers = useMemo(() => {
-        if (!customers) return [];
+        if (!clientes) return [];
         const map = new Map<number, Customer>();
-        customers.forEach((c) => map.set(c.id, c));
+        clientes.forEach((c) => map.set(c.id, c));
         return Array.from(map.values());
-    }, [customers]);
+    }, [clientes]);
 
     const FUSE_OPTIONS = useMemo(
         () => ({
@@ -72,8 +69,8 @@ export function TableCustomers({
         filters.activo === "activos"
             ? filteredCustomers.filter((c) => c.activo)
             : filters.activo === "inactivos"
-                ? filteredCustomers.filter((c) => !c.activo)
-                : filteredCustomers;
+            ? filteredCustomers.filter((c) => !c.activo)
+            : filteredCustomers;
 
     // ORDENAR POR FECHA
     const sortedCustomers = [...filteredByEstado].sort((a, b) => {
@@ -83,8 +80,8 @@ export function TableCustomers({
         return sortDirection === "asc" ? da - db : db - da;
     });
 
-    if (isLoading) return <p className="p-4">Cargando customers...</p>;
-    if (error) return <p className="p-4 text-red-600">Error al cargar datos</p>;
+    if (isLoading) return <p className="p-4">Cargando clientes...</p>;
+    if (isError) return <p className="p-4 text-red-600">Error al cargar datos</p>;
 
     const openEditModal = (customer: Customer) => {
         setEditData({ ...customer });
@@ -93,8 +90,7 @@ export function TableCustomers({
 
     const formatDate = (dateString?: string | null) => {
         if (!dateString) return "—";
-        const date = new Date(dateString);
-        return date.toLocaleDateString("es-MX");
+        return new Date(dateString).toLocaleDateString("es-MX");
     };
 
     return (
@@ -132,8 +128,7 @@ export function TableCustomers({
                                     <span className="text-red-600 font-semibold">Inactivo</span>
                                 )}
                             </TableCell>
-                            <TableCell>{formatDate(c.created_at as any)}</TableCell>
-
+                            <TableCell>{formatDate(c.created_at)}</TableCell>
                             <TableCell className="text-center">
                                 <button
                                     onClick={() => openEditModal(c)}
