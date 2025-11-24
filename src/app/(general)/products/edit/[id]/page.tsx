@@ -1,6 +1,7 @@
 "use client"
 import { Button } from '@/components/ui/button';
 import { fetchByTenisId, fetchMarcas, fetchCategorias } from '@/lib/api';
+import { useTenisById, useMarcas, useCategorias } from "@/hooks/useAPI";
 import { Categoria, Marca, Producto } from '@/types/types';
 import { ArrowLeft, Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -32,58 +33,29 @@ import { Label } from '@/components/ui/label';
 
 const pageEdit = () => {
     const { id } = useParams<{ id: string }>();
-    const [product, setProduct] = useState<Producto | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [categorias, setCategorias] = useState<Categoria[]>([]);
-    const [marcas, setMarcas] = useState<Marca[]>([]);
+    const { tenis, isLoading, isError } = useTenisById(id);
+    const { marcas } = useMarcas();
+    const { categorias } = useCategorias();
+    
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-screen text-center">
+                <p>Cargando producto...</p>
+            </div>
+        );
+    }
 
-    useEffect(() => {
-        if (!id) return;
-
-        const loadProduct = async () => {
-            try {
-            const data = await fetchByTenisId(id);
-            setProduct(data);
-            } catch (error) {
-            console.error('Error loading product:', error);
-            } finally {
-            setLoading(false);
-            }
-        };
-
-        const loadMarcas = async () => {
-            try {
-            const data = await fetchMarcas();
-            setMarcas(data);
-            } catch (error) {
-            console.error('Error loading product:', error);
-            } finally {
-            }
-        };
-
-        const loadCategorias = async () => {
-            try {
-            const data = await fetchCategorias();
-            setCategorias(data);
-            } catch (error) {
-            console.error('Error loading product:', error);
-            } finally {
-            }
-        };
-
-        loadProduct();
-        loadMarcas();
-        loadCategorias();
-    }, [id]);
-
-
-
-    if (loading) return <div>Cargando...</div>;
-    if (!product) return <div>Producto no encontrado</div>;
+    if (isError) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <p>Error el producto</p>
+            </div>
+        );
+    }
 
     return (
         <div className="p-8 w-full">
-            <Link href={"/home/products"}>
+            <Link href={"/products"}>
                 <Button variant="outline" className='cursor-pointer hover:bg-slate-500'>
                     <ArrowLeft />Atrás
                 </Button>
@@ -94,14 +66,14 @@ const pageEdit = () => {
                     <div className="flex-1 flex flex-col gap-2">
 
                         <p className="text-s">Categoria:</p>
-                        <Select defaultValue={product.categorias.id.toString()}>
+                        <Select defaultValue={tenis?.categorias.id.toString()}>
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="Selecciona la categoria" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectGroup>
                                 <SelectLabel>Categorias</SelectLabel>
-                                {categorias.map((cat: any) => (
+                                {categorias?.map((cat: any) => (
                                     <SelectItem key={cat.id} value={cat.id.toString()}>{cat.nombre}</SelectItem>
                                 ))}
                                 </SelectGroup>
@@ -110,15 +82,15 @@ const pageEdit = () => {
 
                         <p className="text-s">Nombre</p>
                         <Input 
-                            defaultValue={product.nombre}
+                            defaultValue={tenis?.nombre}
                             placeholder="Nombre del producto"
                         />
                         <div className="flex flex-wrap gap-4">
-                            {product.imagenes_productos.map((img: any) => (
+                            {tenis?.imagenes_productos.map((img: any) => (
                             <img
                                 key={img.id}
                                 src={img.url}
-                                alt={product.nombre}
+                                alt={tenis?.nombre}
                                 className="w-120 h-120 object-cover rounded border"
                             />
                             ))}
@@ -128,16 +100,16 @@ const pageEdit = () => {
                     <div className="flex-1 flex flex-col gap-6 ">
                         <div className='flex flex-col gap-1'>
                             <h2 className="font-semibold text-2xl">Detalles del Producto</h2>
-                            <p>ID: {product.id}</p>
+                            <p>ID: {tenis?.id}</p>
                             <p className="text-s">Marca:</p>
-                            <Select defaultValue={product.marcas.id.toString()}>
+                            <Select defaultValue={tenis?.marcas.id.toString()}>
                                 <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="Selecciona la marca" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectGroup>
                                     <SelectLabel>Marcas</SelectLabel>
-                                    {marcas.map((mar: any) => (
+                                    {marcas?.map((mar: any) => (
                                         <SelectItem key={mar.id} value={mar.id.toString()}>{mar.nombre}</SelectItem>
                                     ))}
                                     </SelectGroup>
@@ -145,7 +117,7 @@ const pageEdit = () => {
                             </Select>
                             <p>Color:</p>
                             <Input 
-                            defaultValue={product.color}
+                            defaultValue={tenis?.color}
                             placeholder="Nombre del producto"
                         />
                         </div>
@@ -153,7 +125,7 @@ const pageEdit = () => {
                         <div className="flex flex-col gap-2">
                             <h2 className="font-semibold text-2xl">Tallas y cantidad</h2>
                             <div className="flex flex-row flex-wrap gap-2">
-                                {product.inventarios.map((inv: any) => (
+                                {tenis?.inventarios.map((inv: any) => (
                                     <div
                                     key={inv.id}
                                     className={`w-28 h-20 border rounded-lg p-2 flex flex-col items-center justify-center 

@@ -1,6 +1,5 @@
 "use client"
 import { Button } from '@/components/ui/button';
-import { fetchMarcas, fetchCategorias } from '@/lib/api';
 import { Categoria, Marca, Producto } from '@/types/types';
 import { ArrowLeft, Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -27,42 +26,17 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from '@/components/ui/label';
+import { useCategorias, useMarcas } from "@/hooks/useAPI";
 
 const pageEdit = () => {
     const { id } = useParams<{ id: string }>();
+    const { marcas } = useMarcas();
+    const { categorias } = useCategorias();
     const [product, setProduct] = useState<Producto | null>(null);
-    const [categorias, setCategorias] = useState<Categoria[]>([]);
-    const [marcas, setMarcas] = useState<Marca[]>([]);
-
-    useEffect(() => {
-        if (!id) return;
-
-        const loadMarcas = async () => {
-            try {
-            const data = await fetchMarcas();
-            setMarcas(data);
-            } catch (error) {
-            console.error('Error loading marcas:', error);
-            } finally {
-            }
-        };
-
-        const loadCategorias = async () => {
-            try {
-            const data = await fetchCategorias();
-            setCategorias(data);
-            } catch (error) {
-            console.error('Error loading categorias:', error);
-            } finally {
-            }
-        };
-        loadMarcas();
-        loadCategorias();
-    }, [id]);
 
     return (
         <div className="p-8 w-full">
-            <Link href={"/home/products"}>
+            <Link href={"/products"}>
                 <Button variant="outline" className='cursor-pointer hover:bg-slate-500'>
                     <ArrowLeft />Atrás
                 </Button>
@@ -79,7 +53,7 @@ const pageEdit = () => {
                             <SelectContent>
                                 <SelectGroup>
                                 <SelectLabel>Categorias</SelectLabel>
-                                {categorias.map((cat: any) => (
+                                {categorias?.map((cat: any) => (
                                     <SelectItem key={cat.id} value={cat.id.toString()}>{cat.nombre}</SelectItem>
                                 ))}
                                 </SelectGroup>
@@ -104,7 +78,7 @@ const pageEdit = () => {
                                 <SelectContent>
                                     <SelectGroup>
                                     <SelectLabel>Marcas</SelectLabel>
-                                    {marcas.map((mar: any) => (
+                                    {marcas?.map((mar: any) => (
                                         <SelectItem key={mar.id} value={mar.id.toString()}>{mar.nombre}</SelectItem>
                                     ))}
                                     </SelectGroup>

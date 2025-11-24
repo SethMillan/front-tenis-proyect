@@ -7,7 +7,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { useFuseSearch } from "@/hooks/useFuseSearch";
-import { fetchCategorias, fetchMarcas, fetchTenis } from "@/lib/api";
+import { useTenis, useCategorias, useMarcas } from "@/hooks/useAPI";
 
 import { Categoria, Marca, Producto } from "@/types/types";
 import { Filter, List, Search } from "lucide-react";
@@ -34,15 +34,14 @@ const FUSE_OPTIONS = {
 };    
 
 const page = () => {
+    const { tenis, isLoading, isError } = useTenis();
+    const { marcas } = useMarcas();
     const router = useRouter();
-    const [tenis, setTenis] = useState<Producto[]>([]);
-    const [categorias, setCategorias] = useState<Categoria[]>([]);
-    const [marcas, setMarcas] = useState<Marca[]>([]);
 
-    {/* Barra de busqueda */}
+    /* Barra de busqueda */
     const [search, setSearch] = useState("");
 
-    {/* Filtros de busqueda */}
+    /* Filtros de busqueda */
     const [filters, setFilters] = useState({
         marca: "",
         color: "",
@@ -68,44 +67,25 @@ const page = () => {
         }));
     };
     
-    useEffect(() => {
-        async function loadTenis() {
-            try {
-            const data = await fetchTenis();
-            setTenis(data);
-            } catch (err) {
-            console.error("Error fetching tenis data:", err);
-            }
-        }
+    const resultados = useFuseSearch(tenis || [], search, FUSE_OPTIONS);
 
-        const loadMarcas = async () => {
-            try {
-            const data = await fetchMarcas();
-            setMarcas(data);
-            } catch (error) {
-            console.error('Error loading product:', error);
-            } finally {
-            }
-        };
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-screen text-center">
+                <p>Cargando productos...</p>
+            </div>
+        );
+    }
 
-        const loadCategorias = async () => {
-            try {
-            const data = await fetchCategorias();
-            setCategorias(data);
-            } catch (error) {
-            console.error('Error loading product:', error);
-            } finally {
-            }
-        };
-
-        loadTenis();
-        loadMarcas();
-        loadCategorias();
-    },[]);
-
-    const resultados = useFuseSearch(tenis, search, FUSE_OPTIONS);
-
-    const filteredResults = resultados.filter((product: Producto) => {
+    if (isError) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <p>Error al cargar los productos</p>
+            </div>
+        );
+    }
+    
+   /* const filteredResults = resultados.filter((product: Producto) => {
         // Filtro por marca
         if (filters.marca && filters.marca !== "none" && product.marcas.nombre !== filters.marca) {
             return false;
@@ -136,18 +116,17 @@ const page = () => {
         }
         
         return 0;
-    });
-
+    });*/
 
     const handleRowClick = (productId: number) => {
-        router.push(`/home/products/${productId}`);
+        router.push(`/products/${productId}`);
     };
 
     return (
         <div className='pt-1 h-full w-full flex flex-col gap-3 justify-center items-start m-8'>
             <div className="flex flex-center justify-between w-full">
                 <h1 className="text-2xl font-bold">Productos</h1>
-                <Link href={'/home/products/create'}>
+                <Link href={'/products/create'}>
                     <Button className="bg-green-600 hover:bg-green-400">Agregar Producto</Button>
                 </Link>
             </div>
@@ -184,7 +163,7 @@ const page = () => {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="none">Todos</SelectItem>
-                                {marcas.map((mar: any) => (
+                                {marcas?.map((mar: any) => (
                                     <SelectItem key={mar.id} value={mar.nombre}>{mar.nombre}</SelectItem>
                                 ))}
                             </SelectContent>
@@ -246,7 +225,7 @@ const page = () => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {sortedResults.map((product: any) => (
+                        {resultados?.map((product: any) => (
                             <TableRow
                                 key={product.id}
                                 onClick={() => handleRowClick(product.id)}
