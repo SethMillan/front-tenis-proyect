@@ -37,5 +37,5 @@ export function useCategorias() {
 }
 export function useSales() {
   const { data, error, isLoading } = useSWR<Venta[]>('/ventas', fetchSales);
-  return { ventas: data, isLoading, isError: error };
+  return { ventas: data || [], isLoading, isError: !!error };
 }
