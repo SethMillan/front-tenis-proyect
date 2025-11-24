@@ -34,7 +34,7 @@ export function TableSales({ searchTerm, filters, sortDirection }: TableSalesPro
         threshold: 0.4,
     };
   const filteredSales = useFuseSearch(ventas, searchTerm, FUSE_OPTIONS)
-    .filter(venta => {
+    .filter((venta) => {
       const matchesTipoVenta = !filters.tipoVenta  || filters.tipoVenta === "todos" || venta.tipo_venta === filters.tipoVenta;
       const matchesTipoPago = !filters.tipoPago ||  filters.tipoPago === "todos" || venta.tipo_pago === filters.tipoPago;
        //Filtros por fecha
