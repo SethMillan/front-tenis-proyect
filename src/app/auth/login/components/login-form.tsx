@@ -153,7 +153,7 @@ const RegisterForm = () => {
 
       <div className="flex justify-center">
         <Button
-          className="dark:text-[#333333] !text-lg bg-[#3188fd]  hover:bg-[#72b9fe] px-8 py-6 "
+          className="dark:text-[#FFFFFF] !text-base bg-[#3188fd] hover:bg-[#72b9fe] px-8 py-6 cursor-pointer"
           type="submit"
           disabled={isLoading}
         >
