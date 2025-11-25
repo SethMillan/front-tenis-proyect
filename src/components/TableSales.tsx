@@ -6,6 +6,8 @@ import { Venta, Cliente, Empleado } from "@/types/types"
 import { useFuseSearch } from "@/hooks/useFuseSearch"
 import { useSales } from "@/hooks/useAPI"
 import { Loader2 } from "lucide-react"
+import { useState } from "react"
+import { VentaDetalleDialog } from "./DialogSalesDetails"
 interface TableSalesProps {
  searchTerm: string;
   filters: {
@@ -19,6 +21,9 @@ interface TableSalesProps {
 
 export function TableSales({ searchTerm, filters, sortDirection }: TableSalesProps) {
 
+  const [selectedVenta, setSelectedVenta] = useState<Venta | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  
   const { ventas = [], isLoading, isError } = useSales();
 
   const FUSE_OPTIONS = {
@@ -58,6 +63,10 @@ export function TableSales({ searchTerm, filters, sortDirection }: TableSalesPro
       const dateTo = new Date(b.fecha).getTime();
       return sortDirection === "asc" ? dateFrom - dateTo : dateTo - dateFrom;
     });
+    const handleRowClick = (venta:Venta) => {
+      setSelectedVenta(venta);
+      setDialogOpen(true);
+    }
 
   // Estados de carga y error
   if (isLoading) {
@@ -95,7 +104,7 @@ export function TableSales({ searchTerm, filters, sortDirection }: TableSalesPro
     };
 
   return (
-    <Table>
+    <><Table>
       <TableHeader>
         <TableRow>
           <TableHead>Folio</TableHead>
@@ -110,7 +119,9 @@ export function TableSales({ searchTerm, filters, sortDirection }: TableSalesPro
       <TableBody>
         {filteredSales.length > 0 ? (
           filteredSales.map((venta) => (
-            <TableRow key={venta.id}>
+            <TableRow key={venta.id}
+              onClick={() => handleRowClick(venta)}
+              className="cursor-pointer hover:bg-gray-100 transition-colors">
               <TableCell>{venta.id}</TableCell>
               <TableCell>{formatDate(venta.fecha)}</TableCell>
               <TableCell>{venta.tipo_pago}</TableCell>
@@ -128,6 +139,9 @@ export function TableSales({ searchTerm, filters, sortDirection }: TableSalesPro
           </TableRow>
         )}
       </TableBody>
-    </Table>
+    </Table><VentaDetalleDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        venta={selectedVenta} /></>
   )
 }
