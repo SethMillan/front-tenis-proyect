@@ -6,7 +6,14 @@ import { fetchTenis, fetchByTenisId, fetchEmpleados, fetchClientes, fetchCategor
 import { Venta } from '@/types/types';
 
 export function useTenis() {
-  const { data, error, isLoading, mutate } = useSWR('/productos', fetchTenis);
+  const { data, error, isLoading, mutate } = useSWR('/productos', fetchTenis,
+    {
+      refreshInterval: 300000, // para el cache
+      keepPreviousData: true, // mantiene datos previos mientras carga nuevos 
+      dedupingInterval: 60000,// evita multiples solicitudes en un corto periodo
+      revalidateOnMount: true,// siempre valida al montar el componente
+    }
+  );
   return { tenis: data, isLoading, isError: error, refetch: mutate };
 }
 

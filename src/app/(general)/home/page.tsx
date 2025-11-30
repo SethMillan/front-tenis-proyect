@@ -18,7 +18,7 @@ const FUSE_OPTIONS = {
 const Page = () => {
   const {tenis, isLoading, isError} = useTenis();
   const [search, setSearch] = useState("");
-  const resultados = useFuseSearch(tenis || [], search, FUSE_OPTIONS);
+  const resultados = useFuseSearch<Producto>(tenis || [], search, FUSE_OPTIONS);
 
   //! antes estaba asi
   // const [producto, setProducto] = useState<Producto[]>([]);
