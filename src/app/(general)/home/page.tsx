@@ -25,9 +25,15 @@ const FUSE_OPTIONS = {
 const Page = () => {
   const { tenis, isLoading, isError } = useTenis();
   const [search, setSearch] = useState("");
-  const [showPanel, setShowPanel] = useState(true); // ← nuevo estado
+  const [showPanel, setShowPanel] = useState(false);
+  const [selectedMarca, setSelectedMarca] = useState<number | null>(null); 
   const resultados = useFuseSearch<Producto>(tenis || [], search, FUSE_OPTIONS);
   const { marcas = [] } = useMarcas();
+
+  // ← filtrar por marca seleccionada
+  const filteredResults = selectedMarca
+    ? resultados.filter((producto) => producto.marcas.id === selectedMarca)
+    : resultados;
 
   if (isLoading) {
     return (
@@ -76,7 +82,8 @@ const Page = () => {
               {marcas.map((marca) => (
                 <Button
                   key={marca.id}
-                  variant="secondary"
+                  variant={selectedMarca === marca.id ? "default" : "secondary"} // ← cambiar variant si está seleccionado
+                  onClick={() => setSelectedMarca(selectedMarca === marca.id ? null : marca.id)} // ← toggle
                   className="flex items-center gap-2"
                 >
                   {marca.nombre}
@@ -99,7 +106,7 @@ const Page = () => {
           {/* Contenedor de productos */}
           <div className="pt-1 flex flex-col gap-10 justify-start items-start m-8">
             <div className="flex gap-4 justify-center flex-wrap items-start content-start">
-              {resultados.map((producto) => (
+              {filteredResults.map((producto) => (
                 <CardTenis
                   key={producto.id}
                   nombre={producto.nombre}
