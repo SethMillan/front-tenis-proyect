@@ -1,12 +1,13 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Filter, Search } from "lucide-react";
-import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { TableEmployees } from "@/components";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
+import { TableEmployees } from "@/components";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Filter, Search } from "lucide-react";
+import { useEmpleados } from "@/hooks/useAPI";
 
 import {
     Dialog,
@@ -24,38 +25,95 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-const PageEmployees = () => {
-    const [searchTerm, setSearchTerm] = useState("");
+import { useState, useMemo } from "react";
 
-    const [filters, setFilters] = useState({
-        rol: "",
-        activo: "",
+export default function PageEmployees() {
+    const { empleados } = useEmpleados();
+
+    const [search, setSearch] = useState("");
+    const [filters, setFilters] = useState({ activo: "" });
+
+    const [sortConfig, setSortConfig] = useState<{
+        key: "id" | "nombre" | "created_at" | "";
+        direction: "asc" | "desc";
+    }>({
+        key: "",
+        direction: "asc",
     });
 
-    const [sortDirection, setSortDirection] = useState<
-        "" | "asc" | "desc"
-    >("");
+    const handleSort = (key: "id" | "nombre" | "created_at") => {
+        setSortConfig((curr) => ({
+            key,
+            direction:
+                curr.key === key && curr.direction === "asc" ? "desc" : "asc",
+        }));
+    };
+
+    const processedEmployees = useMemo(() => {
+        if (!empleados) return [];
+
+        let data = [...empleados];
+
+        if (search.trim() !== "") {
+            const term = search.toLowerCase();
+            data = data.filter((e) =>
+                `${e.nombre} ${e.apellido_p} ${e.apellido_m ?? ""} ${e.rol ?? ""}`
+                    .toLowerCase()
+                    .includes(term)
+            );
+        }
+
+        if (filters.activo === "activos") data = data.filter((e) => e.activo);
+        if (filters.activo === "inactivos") data = data.filter((e) => !e.activo);
+
+        if (sortConfig.key) {
+            data.sort((a, b) => {
+                const key = sortConfig.key;
+
+                let aValue =
+                    key === "nombre"
+                        ? `${a.nombre} ${a.apellido_p}`
+                        : a[key];
+
+                let bValue =
+                    key === "nombre"
+                        ? `${b.nombre} ${b.apellido_p}`
+                        : b[key];
+
+                if (typeof aValue === "string") aValue = aValue.toLowerCase();
+                if (typeof bValue === "string") bValue = bValue.toLowerCase();
+
+                const comp =
+                    aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+
+                return sortConfig.direction === "asc" ? comp : -comp;
+            });
+        }
+
+        return data;
+    }, [empleados, search, filters, sortConfig]);
 
     return (
         <>
             <div className="pt-1 h-full w-full flex flex-col gap-10 justify-center items-start m-8">
                 <h1 className="text-2xl font-bold">Empleados</h1>
 
-                <div className="flex items-center gap-2">
-                    {/* BUSCADOR */}
-                    <div className="relative flex-1 w-lvh">
+                <div className="flex items-center gap-5 w-full">
+                    <div className="relative flex-1 w-full">
                         <Input
-                            placeholder="Buscar empleados"
-                            className="pl-10"
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Buscar empleados por nombre, teléfono, rol o correo"
+                            className="pl-10 cursor-pointer"
+                            onChange={(e) => setSearch(e.target.value)}
                         />
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 cursor-pointer" />
                     </div>
 
-                    {/* FILTROS */}
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button variant="outline" className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                className="flex items-center gap-2 cursor-pointer"
+                            >
                                 <Filter className="h-4 w-4" /> Filtros
                             </Button>
                         </DialogTrigger>
@@ -66,42 +124,30 @@ const PageEmployees = () => {
                             </DialogHeader>
 
                             <div className="grid gap-4 py-4">
-                                {/* FILTRO ROL */}
-                                <div className="flex flex-col gap-1">
-                                    <label>Rol</label>
-                                    <Select
-                                        onValueChange={(value) =>
-                                            setFilters((prev) => ({ ...prev, rol: value }))
-                                        }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Selecciona un rol" />
-                                        </SelectTrigger>
-
-                                        <SelectContent>
-                                            <SelectItem value="todos">Todos</SelectItem>
-                                            <SelectItem value="Admin">Admin</SelectItem>
-                                            <SelectItem value="Employee">Employee</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {/* FILTRO ACTIVO */}
                                 <div className="flex flex-col gap-1">
                                     <label>Estado</label>
                                     <Select
                                         onValueChange={(value) =>
-                                            setFilters((prev) => ({ ...prev, activo: value }))
+                                            setFilters((prev) => ({
+                                                ...prev,
+                                                activo: value,
+                                            }))
                                         }
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger className="cursor-pointer">
                                             <SelectValue placeholder="Selecciona estado" />
                                         </SelectTrigger>
 
                                         <SelectContent>
-                                            <SelectItem value="todos">Todos</SelectItem>
-                                            <SelectItem value="activos">Activos</SelectItem>
-                                            <SelectItem value="inactivos">Inactivos</SelectItem>
+                                            <SelectItem className="cursor-pointer" value="todos">
+                                                Todos
+                                            </SelectItem>
+                                            <SelectItem className="cursor-pointer" value="activos">
+                                                Activos
+                                            </SelectItem>
+                                            <SelectItem className="cursor-pointer" value="inactivos">
+                                                Inactivos
+                                            </SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -109,48 +155,30 @@ const PageEmployees = () => {
                         </DialogContent>
                     </Dialog>
 
-                    {/* ORDENAR */}
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button variant="outline" className="flex items-center gap-2">
-                                <Filter className="h-4 w-4" /> Ordenar
-                            </Button>
-                        </DialogTrigger>
+                    <Select
+                        onValueChange={(value) =>
+                            handleSort(value as "id" | "nombre" | "created_at")
+                        }
+                    >
+                        <SelectTrigger className="w-[180px] cursor-pointer">
+                            <SelectValue placeholder="Ordenar por:" />
+                        </SelectTrigger>
 
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Ordenar Empleados</DialogTitle>
-                            </DialogHeader>
-
-                            <div className="grid gap-2 py-2">
-                                <Button
-                                    variant={sortDirection === "desc" ? "default" : "outline"}
-                                    onClick={() => setSortDirection("desc")}
-                                >
-                                    Más recientes
-                                </Button>
-
-                                <Button
-                                    variant={sortDirection === "asc" ? "default" : "outline"}
-                                    onClick={() => setSortDirection("asc")}
-                                >
-                                    Más antiguos
-                                </Button>
-
-                                <Button variant="ghost" onClick={() => setSortDirection("")}>
-                                    Limpiar
-                                </Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+                        <SelectContent>
+                            <SelectItem className="cursor-pointer" value="id">
+                                Por ID
+                            </SelectItem>
+                            <SelectItem className="cursor-pointer" value="nombre">
+                                Por nombre
+                            </SelectItem>
+                            <SelectItem className="cursor-pointer" value="created_at">
+                                Por fecha alta
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
 
-                {/* TABLA */}
-                <TableEmployees
-                    searchTerm={searchTerm}
-                    filters={filters}
-                    sortDirection={sortDirection}
-                />
+                <TableEmployees data={processedEmployees} />
             </div>
 
             <ToastContainer
@@ -161,6 +189,4 @@ const PageEmployees = () => {
             />
         </>
     );
-};
-
-export default PageEmployees;
+}
