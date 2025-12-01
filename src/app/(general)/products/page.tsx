@@ -1,5 +1,5 @@
 "use client";
-import React , { useEffect, useState } from "react";
+import React , { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
     Table,  TableBody,  TableCell,  TableHead, TableHeader, TableRow,
@@ -85,38 +85,53 @@ const page = () => {
         );
     }
     
-   /* const filteredResults = resultados.filter((product: Producto) => {
-        // Filtro por marca
-        if (filters.marca && filters.marca !== "none" && product.marcas.nombre !== filters.marca) {
-            return false;
+    const processedProducts = useMemo(() => {
+        if (!tenis) return [];
+
+        let data = [...tenis];
+
+        // Filtrar por búsqueda
+        if (search.trim() !== "") {
+            const term = search.toLowerCase();
+            data = data.filter((product) =>
+                `${product.nombre} ${product.marca} ${product.color ?? ""}`
+                    .toLowerCase()
+                    .includes(term)
+            );
         }
 
-        // Filtro por color
-        if (filters.color && filters.color !== "none" && product.color !== filters.color) {
-            return false;
+        // Filtro por activo/inactivo
+        // 1. Filtro por Marca
+        // Verificamos que exista el filtro y que no sea una opción de "ver todas"
+        if (filters.marca && filters.marca !== "todas") {
+            data = data.filter((p) => p.marca === filters.marca);
         }
 
-        return true;
-    });
-
-    const sortedResults = [...filteredResults].sort((a, b) => {
-        if (!sortConfig.key) return 0;
-        let aValue = a[sortConfig.key];
-        let bValue = b[sortConfig.key];
-
-        if (sortConfig.key === "marcas") {
-            aValue = a.marcas.nombre;
-            bValue = b.marcas.nombre;
+        // 2. Filtro por Color
+        if (filters.color && filters.color !== "todos") {
+            data = data.filter((p) => p.color === filters.color);
         }
-        
-        if (typeof aValue === 'string' && typeof bValue === 'string') {
-            return sortConfig.direction === 'asc'
-            ? aValue.localeCompare(bValue)
-            : bValue.localeCompare(aValue);
+
+        // Ordenar los datos
+        if (sortConfig.key) {
+            data.sort((a, b) => {
+                // 1. Obtenemos el valor según la llave seleccionada ('nombre', 'marca' o 'color')
+                // Usamos ?? "" por si algún producto no tiene color definido, para que no falle.
+                let aValue = (a[sortConfig.key] ?? "").toString().toLowerCase();
+                let bValue = (b[sortConfig.key] ?? "").toString().toLowerCase();
+
+                // 2. Comparamos
+                if (aValue < bValue) {
+                    return sortConfig.direction === "asc" ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return sortConfig.direction === "asc" ? 1 : -1;
+                }
+                return 0;
+            });
         }
-        
-        return 0;
-    });*/
+        return data;
+    }, [tenis, search, filters, sortConfig]);
 
     const handleRowClick = (productId: number) => {
         router.push(`/products/${productId}`);
@@ -127,7 +142,7 @@ const page = () => {
             <div className="flex flex-center justify-between w-full">
                 <h1 className="text-2xl font-bold">Productos</h1>
                 <Link href={'/products/create'}>
-                    <Button className="bg-green-600 hover:bg-green-400">Agregar Producto</Button>
+                    <Button className="hover:bg-green-200 border-1 border-gray-200 bg-gray-50 text-gray-800">Agregar Producto</Button>
                 </Link>
             </div>
 
@@ -196,40 +211,40 @@ const page = () => {
                 
                 <div className="grid gap-4 py-4">
                     <div className="flex flex-col gap-1">
-                    <Select
-                        onValueChange={(value) => handleSort(value as keyof Producto)}
-                    >
-                        <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Ordenar por:" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        <SelectItem value="none">Por ID</SelectItem>
-                        <SelectItem value="nombre">Por nombre (A-Z)</SelectItem>
-                        <SelectItem value="color">Por color (A-Z)</SelectItem>
-                        <SelectItem value="marcas">Por marca (A-Z)</SelectItem>
-                        </SelectContent>
-                    </Select>
+                        <Select
+                            onValueChange={(value) => handleSort(value as keyof Producto)}
+                        >
+                            <SelectTrigger className="w-[180px] cursor-pointer">
+                            <SelectValue placeholder="Ordenar por:" />
+                            </SelectTrigger>
+                            <SelectContent>
+                            <SelectItem value="none" className="cursor-pointer">Por ID</SelectItem>
+                            <SelectItem value="nombre" className="cursor-pointer">Por nombre (A-Z)</SelectItem>
+                            <SelectItem value="color" className="cursor-pointer">Por color (A-Z)</SelectItem>
+                            <SelectItem value="marcas" className="cursor-pointer">Por marca (A-Z)</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
             </div>
-            <div className="rounded-lg overflow-hidden border w-full">
+            <div className="overflow-hidden w-full">
                 <Table className="w-full">
                     <TableHeader>
-                        <TableRow className="bg-slate-500 hover:bg-slate-500">
-                            <TableHead className="w-1/12 text-white">ID</TableHead>
-                            <TableHead className="w-2/12 text-white">Nombre</TableHead>
-                            <TableHead className="w-2/12 text-white">Color</TableHead>
-                            <TableHead className="w-1/12 text-white">Marca</TableHead>
-                            <TableHead className="w-4/12 text-white">Stock (por talla)</TableHead>
-                            <TableHead className="w-2/12 text-white">Precio de compra</TableHead>
+                        <TableRow>
+                            <TableHead className="w-1/12">ID</TableHead>
+                            <TableHead className="w-2/12">Nombre</TableHead>
+                            <TableHead className="w-2/12">Color</TableHead>
+                            <TableHead className="w-1/12">Marca</TableHead>
+                            <TableHead className="w-4/12">Stock (por talla)</TableHead>
+                            <TableHead className="w-2/12">Precio de compra</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {resultados?.map((product: any) => (
+                        {processedProducts?.map((product: any) => (
                             <TableRow
                                 key={product.id}
                                 onClick={() => handleRowClick(product.id)}
-                                className="h-15 cursor-pointer"
+                                className="cursor-pointer"
                             >
                                 <TableCell>{product.id}</TableCell>
                                 <TableCell>{product.nombre}</TableCell>
