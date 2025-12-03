@@ -3,10 +3,10 @@
 import useSWR from 'swr';
 // aqui traigan las funciones de fetch que 
 import { fetchTenis, fetchByTenisId, fetchEmpleados, fetchClientes, fetchCategorias, fetchMarcas,fetchSales, fetchInventario } from '@/lib/api';
-import { Inventario, Marca, Venta } from '@/types/types';
+import { Inventario, Marca, Producto, Venta } from '@/types/types';
 
 export function useTenis() {
-  const { data, error, isLoading, mutate } = useSWR('/productos', fetchTenis,
+  const { data, error, isLoading, mutate } = useSWR<Producto[]>('/productos', fetchTenis,
     {
       refreshInterval: 300000, // para el cache
       keepPreviousData: true, // mantiene datos previos mientras carga nuevos 

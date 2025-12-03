@@ -23,7 +23,7 @@ const FUSE_OPTIONS = {
 };
 
 const Page = () => {
-  const { tenis, isLoading, isError } = useTenis();
+  const { tenis=[], isLoading, isError } = useTenis();
   const [search, setSearch] = useState("");
   const {inventario = []} = useInventario();
   const { marcas = [] } = useMarcas();
@@ -44,20 +44,32 @@ const Page = () => {
   const tallasDisponibles = useMemo(() =>{
     return [...new Set(inventario.filter((item) => item.cantidad>0).map((item)=> item.talla))]
   }, [inventario]);
+  const coloresDisponibles = useMemo(() => {
+    return [...new Set(tenis.map((item)=>item.color))]
+  },[tenis])
+
+console.log(coloresDisponibles)
 
 
-  // como ahora filtramos por marca y talla ya no podemos hacer esto, usaremos otro useMemo
+// como ahora filtramos por marca y talla ya no podemos hacer esto, usaremos otro useMemo
   // var filteredResults = selectedMarca?resultados.filter((producto) => producto.marcas.id === selectedMarca ): resultados;
   const filteredResults  = useMemo(()=>{
     let filtered = resultados;
+    //!podriamos usar esto pero creo que seria mejor si ponemos algo como "producto no disponible" o algo asi
+    //filtered = filtered.filter((item) => item.inventarios.some((inv)=>inv.cantidad>0));
     if(selectedMarca){
       filtered =filtered.filter((item)=> item.marcas.id === selectedMarca);
     }
     if(selectedTalla){
       filtered = filtered.filter((item) => item.inventarios.some((inv) => inv.talla === selectedTalla))
     }
+    if(selectedColor){
+      filtered = filtered.filter((item)=> item.color===selectedColor)
+    }
     return filtered;
-  },[resultados, selectedMarca,selectedTalla]);
+  },[resultados, selectedMarca,selectedTalla, selectedColor]);
+
+
 
   if (isLoading) {
     return (
@@ -115,19 +127,43 @@ const Page = () => {
               ))}
               </div>
              <Select
-              value={selectedTalla || ""}  // ← Conecta con el estado
-              onValueChange={(value) => setSelectedTalla(value || null)}  // ← Maneja el cambio
+              value={selectedTalla || ""} 
+              onValueChange={(value) => setSelectedTalla(value ==="???" ?null:value)} 
              >
                 <SelectTrigger className="w-40 bg-amber-300">
                   <SelectValue placeholder="Filtrar tallas" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="???">Todas</SelectItem>
                   {tallasDisponibles.map((talla,index)=>(
-                    <SelectItem   key={index} value={talla}
-                    onSelect={() => setSelectedTalla(talla === selectedTalla ? null : talla)}
-                    >{talla}</SelectItem>
+                    <SelectItem   
+                      key={index} 
+                      value={talla}
+                    >
+                      {talla}
+                    </SelectItem>
                   )
                   )}
+                </SelectContent>
+              </Select>
+              <Select
+              value={selectedColor || ""}  
+              onValueChange={(value) => setSelectedColor(value ==="???"? null:value)}  // aqui para que pueda poner todos
+              >
+                <SelectTrigger className="w-40 bg-amber-300">
+                  <SelectValue placeholder="Filtrar color" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="???">Todos</SelectItem>
+                  {coloresDisponibles.map((color,index)=>
+                  (
+                    <SelectItem
+                    key={index}
+                    value={color}
+                    >
+                      {color}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
