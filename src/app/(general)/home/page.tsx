@@ -1,11 +1,11 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import CardTenis from "../../../components/CardTenis";
 import { Input } from "@/components/ui/input";
 import { useFuseSearch } from "@/hooks/useFuseSearch";
 import { fetchTenis } from "@/lib/api";
 import { Producto } from "@/types/types";
-import { useMarcas, useTenis } from "@/hooks/useAPI";
+import { useInventario, useMarcas, useTenis } from "@/hooks/useAPI";
 import { Filter, List, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,15 +25,39 @@ const FUSE_OPTIONS = {
 const Page = () => {
   const { tenis, isLoading, isError } = useTenis();
   const [search, setSearch] = useState("");
-  const [showPanel, setShowPanel] = useState(false);
-  const [selectedMarca, setSelectedMarca] = useState<number | null>(null); 
-  const resultados = useFuseSearch<Producto>(tenis || [], search, FUSE_OPTIONS);
+  const {inventario = []} = useInventario();
   const { marcas = [] } = useMarcas();
 
-  // ← filtrar por marca seleccionada
-  const filteredResults = selectedMarca
-    ? resultados.filter((producto) => producto.marcas.id === selectedMarca)
-    : resultados;
+  const [showPanel, setShowPanel] = useState(false);
+  const [selectedMarca, setSelectedMarca] = useState<number | null>(null); // <- Tambien planeo agregar varias marcas seleccionadas, quiza con un array pero se podra?
+  const [selectedTalla, setSelectedTalla] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null); // <- Planeo agregar filtro de color
+  const resultados = useFuseSearch<Producto>(tenis || [], search, FUSE_OPTIONS);
+
+
+  //?normalmente hariamos algo como esto para obtener las tallas
+  //?pero gasta muchos recursos, hace el calculo cada que se renderiza el componente
+  //const tallasDisponibles = [...new Set(inventario.filter((item) => item.cantidad > 0).map((item) => item.talla))]
+  //?por eso usamos useMemo para memorizar el resultado y solo recalcularlo cuando inventario cambie
+  //! recibe dos argumentos, una funcion que retorna el valor a memorizar y un array de dependencias
+  //!el valor se recalcula solo cuando alguna dependencia cambia
+  const tallasDisponibles = useMemo(() =>{
+    return [...new Set(inventario.filter((item) => item.cantidad>0).map((item)=> item.talla))]
+  }, [inventario]);
+
+
+  // como ahora filtramos por marca y talla ya no podemos hacer esto, usaremos otro useMemo
+  // var filteredResults = selectedMarca?resultados.filter((producto) => producto.marcas.id === selectedMarca ): resultados;
+  const filteredResults  = useMemo(()=>{
+    let filtered = resultados;
+    if(selectedMarca){
+      filtered =filtered.filter((item)=> item.marcas.id === selectedMarca);
+    }
+    if(selectedTalla){
+      filtered = filtered.filter((item) => item.inventarios.some((inv) => inv.talla === selectedTalla))
+    }
+    return filtered;
+  },[resultados, selectedMarca,selectedTalla]);
 
   if (isLoading) {
     return (
@@ -90,14 +114,20 @@ const Page = () => {
                 </Button>
               ))}
               </div>
-              <Select>
+             <Select
+              value={selectedTalla || ""}  // ← Conecta con el estado
+              onValueChange={(value) => setSelectedTalla(value || null)}  // ← Maneja el cambio
+             >
                 <SelectTrigger className="w-40 bg-amber-300">
                   <SelectValue placeholder="Filtrar tallas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="light">Light</SelectItem>
-                  <SelectItem value="dark">Dark</SelectItem>
-                  <SelectItem value="system">System</SelectItem>
+                  {tallasDisponibles.map((talla,index)=>(
+                    <SelectItem   key={index} value={talla}
+                    onSelect={() => setSelectedTalla(talla === selectedTalla ? null : talla)}
+                    >{talla}</SelectItem>
+                  )
+                  )}
                 </SelectContent>
               </Select>
             </div>
