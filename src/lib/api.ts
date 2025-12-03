@@ -39,3 +39,6 @@ export async function fetchClientes(){
 export async function fetchSales(){
     return apiRequest('/ventas');
 }
+export async function fetchInventario(){
+    return apiRequest('/inventario');
+}
