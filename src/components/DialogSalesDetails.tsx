@@ -74,10 +74,10 @@ export function VentaDetalleDialog({ open, onOpenChange, venta }: VentaDetalleDi
           </div>
         </DialogHeader>
 
-        <Separator className="my-4" />
+        <Separator className="my-1" />
 
         {/* INFORMACIÓN GENERAL */}
-        <div className="grid grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-2 gap-5 mb-1">
           {/* Sección Cliente */}
           <div className="space-y-3">
             <h3 className="font-semibold text-gray-900">Cliente</h3>
@@ -128,17 +128,16 @@ export function VentaDetalleDialog({ open, onOpenChange, venta }: VentaDetalleDi
           </div>
         </div>
 
-        <Separator className="my-6" />
+        <Separator className="my-1" />
 
         {/* TABLA DE PRODUCTOS */}
         <div className="space-y-4">
           <h3 className="font-semibold text-gray-900 text-lg">Productos Vendidos</h3>
-          <div className="border rounded-lg overflow-hidden">
+          <div className="border rounded-lg overflow-x-auto">
             <Table>
               <TableHeader className="bg-gray-100">
                 <TableRow>
                   <TableHead>Producto</TableHead>
-                  <TableHead>Color</TableHead>
                   <TableHead>Talla</TableHead>
                   <TableHead className="text-right">Cantidad</TableHead>
                   <TableHead className="text-right">Precio Unit.</TableHead>
@@ -151,11 +150,6 @@ export function VentaDetalleDialog({ open, onOpenChange, venta }: VentaDetalleDi
                     <TableRow key={detalle.id} className="hover:bg-gray-50">
                       <TableCell className="font-medium">
                         {detalle.inventarios.productos.nombre}
-                      </TableCell>
-                      <TableCell>
-                        <span className="inline-block px-2 py-1 rounded text-sm" >
-                          {detalle.inventarios.productos.color}
-                        </span>
                       </TableCell>
                       <TableCell className="text-center font-semibold">
                         {detalle.inventarios.talla}
@@ -173,7 +167,7 @@ export function VentaDetalleDialog({ open, onOpenChange, venta }: VentaDetalleDi
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4 text-gray-500">
+                    <TableCell colSpan={5} className="text-center py-4 text-gray-500">
                       Sin productos en esta venta
                     </TableCell>
                   </TableRow>
@@ -183,7 +177,7 @@ export function VentaDetalleDialog({ open, onOpenChange, venta }: VentaDetalleDi
           </div>
         </div>
 
-        <Separator className="my-6" />
+        <Separator className="my-1" />
 
         {/* RESUMEN FINANCIERO */}
         <div className="flex justify-end">
