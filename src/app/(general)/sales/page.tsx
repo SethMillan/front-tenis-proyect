@@ -29,20 +29,20 @@ const pageSales = () => {
     dateFrom: "",
     dateTo: "",
   });
-  const [sortDirection, setSortDirection] = useState<"" | "asc" | "desc">("");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc" | "">("");
 
   return (
     <>
       <div className="pt-1 h-full w-full flex flex-col gap-10 justify-center items-start m-8">
         <h1 className="text-2xl font-bold">Ventas</h1>
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 w-lvh">
+        <div className="flex items-center gap-5 w-full">
+          <div className="relative flex-1 w-full">
             <Input
               placeholder="Buscar ventas"
-              className="pl-10"
+              className="pl-10 cursor-pointer"
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 cursor-pointer" />
           </div>
           <Dialog>
             <DialogTrigger asChild>
@@ -129,16 +129,13 @@ const pageSales = () => {
 
           {/*Select de ordenar*/}
           <Select
-            value={sortDirection || "default"}
-            onValueChange={(value) => setSortDirection(value === "default" ? "" : value as "asc" | "desc")}
+            value={sortDirection}
+            onValueChange={(value) => setSortDirection(value as "asc" | "desc")}
           >
             <SelectTrigger className="w-[180px] cursor-pointer">
               <SelectValue placeholder="Ordenar por:" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="default" className="cursor-pointer">
-                Sin orden
-              </SelectItem>
               <SelectItem value="desc" className="cursor-pointer">
                 Ventas más recientes
               </SelectItem>
