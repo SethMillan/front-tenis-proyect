@@ -2,11 +2,11 @@
 
 import useSWR, { mutate } from 'swr';
 // aqui traigan las funciones de fetch que 
-import { fetchTenis, fetchByTenisId, fetchEmpleados, fetchClientes, fetchCategorias, fetchMarcas,fetchSales } from '@/lib/api';
-import { Marca, Venta } from '@/types/types';
+import { fetchTenis, fetchByTenisId, fetchEmpleados, fetchClientes, fetchCategorias, fetchMarcas,fetchSales, fetchInventario } from '@/lib/api';
+import { Inventario, Marca, Producto, Venta } from '@/types/types';
 
 export function useTenis() {
-  const { data, error, isLoading, mutate } = useSWR('/productos', fetchTenis,
+  const { data, error, isLoading, mutate } = useSWR<Producto[]>('/productos', fetchTenis,
     {
       refreshInterval: 300000, // para el cache
       keepPreviousData: true, // mantiene datos previos mientras carga nuevos 
@@ -46,4 +46,8 @@ export function useCategorias() {
 export function useSales() {
   const { data, error, isLoading } = useSWR<Venta[]>('/ventas', fetchSales);
   return { ventas: data || [], isLoading, isError: !!error };
+}
+export function useInventario() {
+  const { data, error, isLoading } = useSWR<Inventario[]>('/inventario', fetchInventario);
+  return { inventario: data || [], isLoading, isError: !!error };
 }

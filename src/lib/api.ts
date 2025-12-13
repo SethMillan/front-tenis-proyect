@@ -83,6 +83,6 @@ export async function updateCliente(id: number, data: any) {
 export async function fetchSales() {
   return apiRequest("/ventas");
 }
-
-
-
+export async function fetchInventario(){
+    return apiRequest('/inventario');
+}

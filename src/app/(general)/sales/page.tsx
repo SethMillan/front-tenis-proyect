@@ -6,20 +6,19 @@ import { Input } from "@/components/ui/input";
 import { TableSales } from "@/components/index";
 import { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Venta } from "@/types/types";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
 import { date } from "zod";
 
 const pageSales = () => {
@@ -30,20 +29,20 @@ const pageSales = () => {
     dateFrom: "",
     dateTo: "",
   });
-  const [sortDirection, setSortDirection] = useState<"" | "asc" | "desc">("");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc" | "">("");
 
   return (
     <>
       <div className="pt-1 h-full w-full flex flex-col gap-10 justify-center items-start m-8">
         <h1 className="text-2xl font-bold">Ventas</h1>
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 w-lvh">
+        <div className="flex items-center gap-5 w-full">
+          <div className="relative flex-1 w-full">
             <Input
               placeholder="Buscar ventas"
-              className="pl-10"
+              className="pl-10 cursor-pointer"
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 cursor-pointer" />
           </div>
           <Dialog>
             <DialogTrigger asChild>
@@ -128,37 +127,23 @@ const pageSales = () => {
             </DialogContent>
           </Dialog>
 
-          {/*Boton de ordenar*/}
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" /> Ordenar
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Ordenar Ventas</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-2 py-2">
-                <Button
-                  variant={sortDirection === "desc" ? "default" : "outline"}
-                  onClick={() => setSortDirection("desc")}
-                >
-                  Ventas más recientes
-                </Button>
-                <Button
-                  variant={sortDirection === "asc" ? "default" : "outline"}
-                  onClick={() => setSortDirection("asc")}
-                >
-                  Ventas más antiguas
-                </Button>
-
-                <Button variant="ghost" onClick={() => setSortDirection("")}>
-                  Limpiar
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          {/*Select de ordenar*/}
+          <Select
+            value={sortDirection}
+            onValueChange={(value) => setSortDirection(value as "asc" | "desc")}
+          >
+            <SelectTrigger className="w-[180px] cursor-pointer">
+              <SelectValue placeholder="Ordenar por:" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desc" className="cursor-pointer">
+                Ventas más recientes
+              </SelectItem>
+              <SelectItem value="asc" className="cursor-pointer">
+                Ventas más antiguas
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <TableSales
           searchTerm={searchTerm}
