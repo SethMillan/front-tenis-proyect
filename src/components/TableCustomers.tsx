@@ -22,6 +22,9 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { toast } from "react-toastify";
+import { updateCliente } from "@/lib/api";
+import { useClientes } from "@/hooks/useAPI";
 
 export function TableCustomers({
     data,
@@ -30,8 +33,10 @@ export function TableCustomers({
     data: Customer[];
     onRowClick?: (customer: Customer) => void;
 }) {
+    const { mutate } = useClientes();
     const [editData, setEditData] = useState<Customer | null>(null);
     const [openModal, setOpenModal] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const openEditModal = (customer: Customer) => {
         setEditData({ ...customer });
@@ -41,6 +46,41 @@ export function TableCustomers({
     const formatDate = (dateString?: string | null) => {
         if (!dateString) return "—";
         return new Date(dateString).toLocaleDateString("es-MX");
+    };
+
+    const handleUpdate = async () => {
+        if (!editData) return;
+
+        setLoading(true);
+
+        try {
+            const payload = {
+                nombres: editData.nombres,
+                apellido_p: editData.apellido_p,
+                apellido_m: editData.apellido_m || undefined,
+                telefono: editData.telefono || undefined,
+                email: editData.email || undefined,
+            };
+
+            await updateCliente(editData.id, payload);
+
+            toast.success("Cliente actualizado correctamente", {
+                toastId: "cliente-update-success",
+            });
+
+            mutate();
+            setOpenModal(false);
+        } catch (error: any) {
+            toast.error(
+                error.message || "Error al actualizar el cliente",
+                {
+                    toastId: "cliente-update-error",
+                }
+            );
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -64,9 +104,7 @@ export function TableCustomers({
                         <TableRow
                             key={c.id}
                             className={
-                                onRowClick
-                                    ? "cursor-pointer hover:bg-gray-50"
-                                    : ""
+                                onRowClick ? "cursor-pointer hover:bg-gray-50" : ""
                             }
                             onClick={() => onRowClick?.(c)}
                         >
@@ -83,11 +121,11 @@ export function TableCustomers({
                             </TableCell>
                             <TableCell>
                                 {c.activo ? (
-                                    <span className="text-green-600 font-semibold cursor-default">
+                                    <span className="text-green-600 font-semibold">
                                         Activo
                                     </span>
                                 ) : (
-                                    <span className="text-red-600 font-semibold cursor-default">
+                                    <span className="text-red-600 font-semibold">
                                         Inactivo
                                     </span>
                                 )}
@@ -102,7 +140,7 @@ export function TableCustomers({
                                     }}
                                     className="text-blue-600 hover:text-blue-800 cursor-pointer"
                                 >
-                                    <Pencil size={18} className="cursor-pointer" />
+                                    <Pencil size={18} />
                                 </button>
                             </TableCell>
                         </TableRow>
@@ -121,13 +159,9 @@ export function TableCustomers({
                             <div>
                                 <Label>Nombres</Label>
                                 <Input
-                                    className="cursor-pointer"
                                     value={editData.nombres}
                                     onChange={(e) =>
-                                        setEditData({
-                                            ...editData,
-                                            nombres: e.target.value,
-                                        })
+                                        setEditData({ ...editData, nombres: e.target.value })
                                     }
                                 />
                             </div>
@@ -135,13 +169,9 @@ export function TableCustomers({
                             <div>
                                 <Label>Apellido Paterno</Label>
                                 <Input
-                                    className="cursor-pointer"
                                     value={editData.apellido_p}
                                     onChange={(e) =>
-                                        setEditData({
-                                            ...editData,
-                                            apellido_p: e.target.value,
-                                        })
+                                        setEditData({ ...editData, apellido_p: e.target.value })
                                     }
                                 />
                             </div>
@@ -149,13 +179,9 @@ export function TableCustomers({
                             <div>
                                 <Label>Apellido Materno</Label>
                                 <Input
-                                    className="cursor-pointer"
                                     value={editData.apellido_m ?? ""}
                                     onChange={(e) =>
-                                        setEditData({
-                                            ...editData,
-                                            apellido_m: e.target.value,
-                                        })
+                                        setEditData({ ...editData, apellido_m: e.target.value })
                                     }
                                 />
                             </div>
@@ -163,13 +189,9 @@ export function TableCustomers({
                             <div>
                                 <Label>Teléfono</Label>
                                 <Input
-                                    className="cursor-pointer"
                                     value={editData.telefono ?? ""}
                                     onChange={(e) =>
-                                        setEditData({
-                                            ...editData,
-                                            telefono: e.target.value,
-                                        })
+                                        setEditData({ ...editData, telefono: e.target.value })
                                     }
                                 />
                             </div>
@@ -177,35 +199,18 @@ export function TableCustomers({
                             <div>
                                 <Label>Email</Label>
                                 <Input
-                                    className="cursor-pointer"
                                     value={editData.email ?? ""}
                                     onChange={(e) =>
-                                        setEditData({
-                                            ...editData,
-                                            email: e.target.value,
-                                        })
+                                        setEditData({ ...editData, email: e.target.value })
                                     }
                                 />
                             </div>
 
                             <div>
                                 <Label>Activo</Label>
-                                <div className="flex items-center gap-2 mt-1 cursor-pointer">
-                                    <Switch
-                                        className="cursor-pointer"
-                                        checked={editData.activo ?? false}
-                                        onCheckedChange={(val) =>
-                                            setEditData({
-                                                ...editData,
-                                                activo: val,
-                                            })
-                                        }
-                                    />
-                                    <span className="cursor-default">
-                                        {editData.activo
-                                            ? "Activo"
-                                            : "Inactivo"}
-                                    </span>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <Switch checked={editData.activo ?? false} disabled />
+                                    <span>{editData.activo ? "Activo" : "Inactivo"}</span>
                                 </div>
                             </div>
                         </div>
@@ -214,10 +219,13 @@ export function TableCustomers({
                     <DialogFooter>
                         <Button
                             variant="outline"
-                            className="cursor-pointer"
                             onClick={() => setOpenModal(false)}
                         >
                             Cerrar
+                        </Button>
+
+                        <Button onClick={handleUpdate} disabled={loading}>
+                            {loading ? "Guardando..." : "Guardar cambios"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

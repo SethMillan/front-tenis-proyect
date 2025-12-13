@@ -22,14 +22,19 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
+import { useEmpleados } from "@/hooks/useAPI";
+import { updateEmpleado } from "@/lib/api";
+import { toast } from "react-toastify";
 
 type Props = {
   data: Empleado[];
 };
 
 export function TableEmployees({ data }: Props) {
+  const { mutate } = useEmpleados();
   const [editData, setEditData] = useState<Empleado | null>(null);
   const [openModal, setOpenModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const uniqueEmployees = useMemo(() => {
     if (!data) return [];
@@ -46,6 +51,42 @@ export function TableEmployees({ data }: Props) {
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "—";
     return new Date(dateString).toLocaleDateString("es-MX");
+  };
+
+  const handleUpdate = async () => {
+    if (!editData) return;
+
+    setLoading(true);
+
+    try {
+      const payload = {
+        nombre: editData.nombre,
+        apellido_p: editData.apellido_p,
+        apellido_m: editData.apellido_m || undefined,
+        telefono: editData.telefono || undefined,
+        email: editData.email || undefined,
+        rol: editData.rol,
+      };
+
+      await updateEmpleado(editData.id, payload);
+
+      toast.success("Empleado actualizado correctamente", {
+        toastId: "empleado-update-success",
+      });
+
+      mutate();
+      setOpenModal(false);
+    } catch (error: any) {
+      toast.error(
+        error.message || "Error al actualizar el empleado",
+        {
+          toastId: "empleado-update-error",
+        }
+      );
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,7 +109,7 @@ export function TableEmployees({ data }: Props) {
           {uniqueEmployees.map((emp) => (
             <TableRow key={emp.id}>
               <TableCell>{emp.id}</TableCell>
-              <TableCell className="cursor-pointer">
+              <TableCell>
                 {emp.nombre} {emp.apellido_p} {emp.apellido_m}
               </TableCell>
               <TableCell>{emp.rol}</TableCell>
@@ -115,7 +156,6 @@ export function TableEmployees({ data }: Props) {
               <div>
                 <Label>Nombre</Label>
                 <Input
-                  className="cursor-pointer"
                   value={editData.nombre}
                   onChange={(e) =>
                     setEditData({ ...editData, nombre: e.target.value })
@@ -126,7 +166,6 @@ export function TableEmployees({ data }: Props) {
               <div>
                 <Label>Apellido Paterno</Label>
                 <Input
-                  className="cursor-pointer"
                   value={editData.apellido_p}
                   onChange={(e) =>
                     setEditData({ ...editData, apellido_p: e.target.value })
@@ -137,7 +176,6 @@ export function TableEmployees({ data }: Props) {
               <div>
                 <Label>Apellido Materno</Label>
                 <Input
-                  className="cursor-pointer"
                   value={editData.apellido_m ?? ""}
                   onChange={(e) =>
                     setEditData({ ...editData, apellido_m: e.target.value })
@@ -147,19 +185,21 @@ export function TableEmployees({ data }: Props) {
 
               <div>
                 <Label>Rol</Label>
-                <Input
-                  className="cursor-pointer"
+                <select
                   value={editData.rol}
                   onChange={(e) =>
-                    setEditData({ ...editData, rol: e.target.value })
+                    setEditData({ ...editData, rol: e.target.value as any })
                   }
-                />
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="Admin">Admin</option>
+                  <option value="Employee">Employee</option>
+                </select>
               </div>
 
               <div>
                 <Label>Teléfono</Label>
                 <Input
-                  className="cursor-pointer"
                   value={editData.telefono ?? ""}
                   onChange={(e) =>
                     setEditData({ ...editData, telefono: e.target.value })
@@ -170,7 +210,6 @@ export function TableEmployees({ data }: Props) {
               <div>
                 <Label>Email</Label>
                 <Input
-                  className="cursor-pointer"
                   value={editData.email ?? ""}
                   onChange={(e) =>
                     setEditData({ ...editData, email: e.target.value })
@@ -180,30 +219,21 @@ export function TableEmployees({ data }: Props) {
 
               <div>
                 <Label>Activo</Label>
-
-                <div className="flex items-center gap-2 mt-1 cursor-pointer">
-                  <Switch
-                    className="cursor-pointer"
-                    checked={editData.activo ?? false}
-                    onCheckedChange={(val) =>
-                      setEditData({ ...editData, activo: val })
-                    }
-                  />
-                  <span className="cursor-pointer">
-                    {editData.activo ? "Activo" : "Inactivo"}
-                  </span>
+                <div className="flex items-center gap-2 mt-1">
+                  <Switch disabled checked={editData.activo ?? false} />
+                  <span>{editData.activo ? "Activo" : "Inactivo"}</span>
                 </div>
               </div>
             </div>
           )}
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenModal(false)}
-              className="cursor-pointer"
-            >
+            <Button variant="outline" onClick={() => setOpenModal(false)}>
               Cerrar
+            </Button>
+
+            <Button onClick={handleUpdate} disabled={loading}>
+              {loading ? "Guardando..." : "Guardar cambios"}
             </Button>
           </DialogFooter>
         </DialogContent>

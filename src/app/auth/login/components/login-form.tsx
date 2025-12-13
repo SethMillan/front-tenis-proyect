@@ -17,7 +17,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authService } from "@/features/auth/auth-service";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 
 const loginSchema = z.object({
   email: z.email({ message: "El email no es valido" }),
@@ -26,13 +26,9 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-const RegisterForm = () => {
-  // * esto nos va a servir para navegar entre paginas jeje
-  // * cosas como
-  // * router.push("/dashboard")     router.back()     router.refresh()
+const LoginForm = () => {
   const router = useRouter();
-  const [error, setError] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -43,55 +39,27 @@ const RegisterForm = () => {
   });
 
   const onSubmit = form.handleSubmit(async (data) => {
-    setError("");
     setIsLoading(true);
+
     try {
       const res = await authService.login(data);
-      if (!res.ok) {
-        setError("Usuario o contraseña equivocados");
-        toast.error("Usuario o contraseña equivocados", {
-          toastId: "login-error",
-          style: {
-            backgroundColor: "#F87171",
-            color: "#0F0F0F",
-            fontSize: "16px",
-            height: "45px",
-            minHeight: "45px",
-            maxHeight: "45px",
-          },
-          closeButton: false,
-        });
 
+      if (!res.ok) {
+        toast.error("Usuario o contraseña incorrectos", {
+          toastId: "login-error",
+        });
         return;
       }
-      toast.success("Inicio de Sesión Exitoso  : :  Ingresando . . .", {
+
+      toast.success("Inicio de sesión exitoso", {
         toastId: "login-success",
-        style: {
-          backgroundColor: "#34D399",
-          color: "#0F0F0F",
-          fontSize: "16px",
-          height: "45px",
-          minHeight: "45px",
-          maxHeight: "45px",
-        },
-        closeButton: false,
-      });
-      router.push("/home");
-    } catch (err) {
-      setError("Error de conexión: " + err);
-      toast.error("Error de conexión", {
-        toastId: "connection-error",
-        style: {
-          backgroundColor: "#F87171",
-          color: "#0F0F0F",
-          fontSize: "16px",
-          height: "45px",
-          minHeight: "45px",
-          maxHeight: "45px",
-        },
-        closeButton: false,
       });
 
+      router.push("/home");
+    } catch (error) {
+      toast.error("Error de conexión con el servidor", {
+        toastId: "login-connection-error",
+      });
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -99,7 +67,7 @@ const RegisterForm = () => {
   });
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full ">
+    <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full">
       <Form {...form}>
         <FormField
           control={form.control}
@@ -111,9 +79,9 @@ const RegisterForm = () => {
               </FormLabel>
               <FormControl>
                 <Input
-                  className="!text-sm p-5 dark:text-[#777979] dark:border-none"
-                  placeholder="Ingresa tu usuario"
                   {...field}
+                  placeholder="Ingresa tu usuario"
+                  className="!text-sm p-5 dark:text-[#777979] dark:border-none"
                 />
               </FormControl>
               <FormMessage />
@@ -128,21 +96,21 @@ const RegisterForm = () => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs dark:text-[#E0E0E0] ">
+              <FormLabel className="text-xs dark:text-[#E0E0E0]">
                 Contraseña
               </FormLabel>
               <FormControl>
                 <Input
-                  className="!text-sm p-5 dark:text-[#777979] dark:border-none"
-                  placeholder="Ingresa tu contraseña"
-                  type="password"
                   {...field}
+                  type="password"
+                  placeholder="Ingresa tu contraseña"
+                  className="!text-sm p-5 dark:text-[#777979] dark:border-none"
                 />
               </FormControl>
               <FormMessage />
               <Link
-                href=""
-                className="block text-sm pt-2  hover:underline text-right text-[#3188fd]"
+                href="#"
+                className="block text-sm pt-2 text-right text-[#3188fd] hover:underline"
               >
                 ¿Olvidaste tu contraseña?
               </Link>
@@ -153,15 +121,15 @@ const RegisterForm = () => {
 
       <div className="flex justify-center">
         <Button
-          className="dark:text-[#FFFFFF] !text-base bg-[#3188fd] hover:bg-[#72b9fe] px-8 py-6 cursor-pointer"
           type="submit"
           disabled={isLoading}
+          className="bg-[#3188fd] hover:bg-[#72b9fe] px-8 py-6"
         >
-          {isLoading ? "Iniciando Sesión..." : "Login"}
+          {isLoading ? "Iniciando sesión..." : "Login"}
         </Button>
       </div>
     </form>
   );
 };
 
-export default RegisterForm;
+export default LoginForm;

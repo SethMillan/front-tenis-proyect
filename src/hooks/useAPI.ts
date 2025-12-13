@@ -1,6 +1,6 @@
 'use client';
 
-import useSWR from 'swr';
+import useSWR, { mutate } from 'swr';
 // aqui traigan las funciones de fetch que 
 import { fetchTenis, fetchByTenisId, fetchEmpleados, fetchClientes, fetchCategorias, fetchMarcas,fetchSales } from '@/lib/api';
 import { Marca, Venta } from '@/types/types';
@@ -24,13 +24,14 @@ export function useTenisById(id: string | null) {
 }
 
 export function useEmpleados() {
-  const { data, error, isLoading } = useSWR('/empleados', fetchEmpleados);
-  return { empleados: data, isLoading, isError: error };
+  const { data, error, isLoading, mutate } = useSWR('/empleados', fetchEmpleados);
+  return { empleados: data, isLoading, isError: error, mutate };
 }
 
+
 export function useClientes() {
-  const { data, error, isLoading } = useSWR('/clientes', fetchClientes);
-  return { clientes: data, isLoading, isError: error };
+  const { data, error, isLoading, mutate } = useSWR('/clientes', fetchClientes);
+  return { clientes: data, isLoading, isError: error, mutate };
 }
 
 export function useMarcas() {
