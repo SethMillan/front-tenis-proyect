@@ -6,20 +6,19 @@ import { Input } from "@/components/ui/input";
 import { TableSales } from "@/components/index";
 import { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Venta } from "@/types/types";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
 import { date } from "zod";
 
 const pageSales = () => {
@@ -128,37 +127,26 @@ const pageSales = () => {
             </DialogContent>
           </Dialog>
 
-          {/*Boton de ordenar*/}
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" /> Ordenar
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Ordenar Ventas</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-2 py-2">
-                <Button
-                  variant={sortDirection === "desc" ? "default" : "outline"}
-                  onClick={() => setSortDirection("desc")}
-                >
-                  Ventas más recientes
-                </Button>
-                <Button
-                  variant={sortDirection === "asc" ? "default" : "outline"}
-                  onClick={() => setSortDirection("asc")}
-                >
-                  Ventas más antiguas
-                </Button>
-
-                <Button variant="ghost" onClick={() => setSortDirection("")}>
-                  Limpiar
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          {/*Select de ordenar*/}
+          <Select
+            value={sortDirection || "default"}
+            onValueChange={(value) => setSortDirection(value === "default" ? "" : value as "asc" | "desc")}
+          >
+            <SelectTrigger className="w-[180px] cursor-pointer">
+              <SelectValue placeholder="Ordenar por:" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default" className="cursor-pointer">
+                Sin orden
+              </SelectItem>
+              <SelectItem value="desc" className="cursor-pointer">
+                Ventas más recientes
+              </SelectItem>
+              <SelectItem value="asc" className="cursor-pointer">
+                Ventas más antiguas
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <TableSales
           searchTerm={searchTerm}
