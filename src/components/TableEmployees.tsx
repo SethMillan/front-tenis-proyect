@@ -66,6 +66,8 @@ export function TableEmployees({ data }: Props) {
         telefono: editData.telefono || undefined,
         email: editData.email || undefined,
         rol: editData.rol,
+        activo: editData.activo,
+
       };
 
       await updateEmpleado(editData.id, payload);
@@ -220,7 +222,12 @@ export function TableEmployees({ data }: Props) {
               <div>
                 <Label>Activo</Label>
                 <div className="flex items-center gap-2 mt-1">
-                  <Switch disabled checked={editData.activo ?? false} />
+                  <Switch
+                    checked={editData.activo ?? false}
+                    onCheckedChange={(value) =>
+                      setEditData({ ...editData, activo: value })
+                    }
+                  />
                   <span>{editData.activo ? "Activo" : "Inactivo"}</span>
                 </div>
               </div>

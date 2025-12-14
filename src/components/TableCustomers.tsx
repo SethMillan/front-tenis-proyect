@@ -60,6 +60,8 @@ export function TableCustomers({
                 apellido_m: editData.apellido_m || undefined,
                 telefono: editData.telefono || undefined,
                 email: editData.email || undefined,
+                activo: editData.activo, 
+
             };
 
             await updateCliente(editData.id, payload);
@@ -209,7 +211,12 @@ export function TableCustomers({
                             <div>
                                 <Label>Activo</Label>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <Switch checked={editData.activo ?? false} disabled />
+                                    <Switch
+                                        checked={editData.activo ?? false}
+                                        onCheckedChange={(value) =>
+                                            setEditData({ ...editData, activo: value })
+                                        }
+                                    />
                                     <span>{editData.activo ? "Activo" : "Inactivo"}</span>
                                 </div>
                             </div>
