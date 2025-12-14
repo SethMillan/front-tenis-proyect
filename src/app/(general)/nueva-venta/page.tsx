@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import PickVariantDialog from "@/components/PickVariantDialog";
+import CheckoutDialog from "@/components/CheckoutDialog";
 
 // las opciones de FuseJS para la busqueda
 const FUSE_OPTIONS = {
@@ -31,11 +32,16 @@ const Page = () => {
   const { inventario = [] } = useInventario();
   const { marcas = [] } = useMarcas();
 
-  const [showPanel, setShowPanel] = useState(false);
+  const [showPanel, setShowPanel] = useState(true);
   const [selectedMarca, setSelectedMarca] = useState<number | null>(null); // <- Tambien planeo agregar varias marcas seleccionadas, quiza con un array pero se podra?
   const [selectedTalla, setSelectedTalla] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null); // <- Planeo agregar filtro de color
   const resultados = useFuseSearch<Producto>(tenis || [], search, FUSE_OPTIONS);
+  const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
+  const [checkoutData, setCheckoutData] = useState<{
+    cliente_id: number | null;
+    tipo_pago: string;
+  } | null>(null);
 
   // ventas / detalle de venta
   type SaleItem = {
@@ -173,46 +179,53 @@ const Page = () => {
 
   const [isClosing, setIsClosing] = useState(false);
 
-  async function closeSale() {
-  if (saleDetails.length === 0) {
-    alert("No hay productos para cerrar la venta");
-    return;
+  function openCheckout() {
+    if (saleDetails.length === 0) {
+      alert("No hay productos para cerrar la venta");
+      return;
+    }
+    setShowCheckoutDialog(true);
   }
-  setIsClosing(true);
 
-  const subtotal = saleDetails.reduce((s, it) => s + it.qty * it.precio, 0);
-  const total = subtotal;
+  async function closeSale(data: {
+    cliente_id: number | null;
+    tipo_pago: string;
+  }) {
+    setIsClosing(true);
 
-  const payload = {
-  tipo_venta: "Presencial",
-  tipo_pago: "Efectivo",
-  empleado_id: 1,
-  subtotal: parseFloat(subtotal.toFixed(2)),
-  descuento: 0,
-  total: parseFloat(total.toFixed(2)),
-  detalles: saleDetails.map(item => ({
-    inventario_id: item.inventarioId,
-    cantidad: item.qty,
-    total: parseFloat((item.qty * item.precio).toFixed(2))
-  }))
-};
+    const subtotal = saleDetails.reduce((s, it) => s + it.qty * it.precio, 0);
+    const total = subtotal;
 
-  console.log("Payload con detalles:", JSON.stringify(payload, null, 2));
+    const payload = {
+      tipo_venta: "Presencial",
+      tipo_pago: data.tipo_pago,
+      cliente_id: data.cliente_id,
+      empleado_id: 1,
+      subtotal: parseFloat(subtotal.toFixed(2)),
+      descuento: 0,
+      total: parseFloat(total.toFixed(2)),
+      detalles: saleDetails.map((item) => ({
+        inventario_id: item.inventarioId,
+        cantidad: item.qty,
+        total: parseFloat((item.qty * item.precio).toFixed(2)),
+      })),
+    };
 
-  try {
-    const res = await createVenta(payload);
-    mutate("/inventario");
-    mutate("/productos");
-    setSaleDetails([]);
-    setShowPanel(false);
-    alert(`Venta creada correctamente (id: ${res.id ?? "--"})`);
-  } catch (err: any) {
-    console.error("Error completo:", err);
-    alert(err.message || "Error al crear la venta");
-  } finally {
-    setIsClosing(false);
+    try {
+      const res = await createVenta(payload);
+      mutate("/inventario");
+      mutate("/productos");
+      setSaleDetails([]);
+      setShowPanel(false);
+      setShowCheckoutDialog(false);
+      alert(`Venta creada correctamente (id: ${res.id ?? "--"})`);
+    } catch (err: any) {
+      console.error("Error completo:", err);
+      alert(err.message || "Error al crear la venta");
+    } finally {
+      setIsClosing(false);
+    }
   }
-}
 
   if (isLoading) {
     return (
@@ -253,7 +266,7 @@ const Page = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             </div>
             <div className="flex justify-between w-full ">
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {marcas.map((marca) => (
                   <Button
                     key={marca.id}
@@ -406,8 +419,8 @@ const Page = () => {
                     >
                       Limpiar
                     </Button>
-                    <Button onClick={closeSale} disabled={isClosing}>
-                      {isClosing ? "Procesando..." : "Cerrar venta"}
+                    <Button onClick={openCheckout} disabled={isClosing}>
+                      Cerrar venta
                     </Button>
                   </div>
                 </div>
@@ -423,6 +436,13 @@ const Page = () => {
           reservedForInventory={0}
         />
       </div>
+      <CheckoutDialog
+        open={showCheckoutDialog}
+        onClose={() => setShowCheckoutDialog(false)}
+        onConfirm={closeSale}
+        total={saleDetails.reduce((s, it) => s + it.qty * it.precio, 0)}
+        isProcessing={isClosing}
+      />
     </>
   );
 };

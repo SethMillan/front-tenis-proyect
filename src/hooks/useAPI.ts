@@ -3,7 +3,7 @@
 import useSWR, { mutate } from 'swr';
 // aqui traigan las funciones de fetch que 
 import { fetchTenis, fetchByTenisId, fetchEmpleados, fetchClientes, fetchCategorias, fetchMarcas,fetchSales, fetchInventario, fetchSalesReportPDF } from '@/lib/api';
-import { Inventario, Marca, Producto, Venta } from '@/types/types';
+import { Cliente, Inventario, Marca, Producto, Venta } from '@/types/types';
 
 export function useTenis() {
   const { data, error, isLoading, mutate } = useSWR<Producto[]>('/productos', fetchTenis,
@@ -30,7 +30,7 @@ export function useEmpleados() {
 
 
 export function useClientes() {
-  const { data, error, isLoading, mutate } = useSWR('/clientes', fetchClientes);
+  const { data, error, isLoading, mutate } = useSWR<Cliente[]>('/clientes', fetchClientes);
   return { clientes: data, isLoading, isError: error, mutate };
 }
 
