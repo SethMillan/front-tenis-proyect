@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 
 export default function PageCustomers() {
     const { clientes, isLoading, isError } = useClientes();
@@ -79,10 +80,8 @@ export default function PageCustomers() {
                         ? `${b.nombres} ${b.apellido_p}`
                         : b[key];
 
-                if (typeof aValue === "string")
-                    aValue = aValue.toLowerCase();
-                if (typeof bValue === "string")
-                    bValue = bValue.toLowerCase();
+                if (typeof aValue === "string") aValue = aValue.toLowerCase();
+                if (typeof bValue === "string") bValue = bValue.toLowerCase();
 
                 const compare =
                     aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
@@ -94,30 +93,50 @@ export default function PageCustomers() {
         return data;
     }, [clientes, search, filters, sortConfig]);
 
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <p>Cargando clientes...</p>
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <p>Error al cargar clientes</p>
+            </div>
+        );
+    }
+
     return (
         <>
-            <div className="pt-1 h-full w-full flex flex-col gap-10 justify-center items-start m-8">
-                <h1 className="text-2xl font-bold">Clientes</h1>
+            <div className="pt-1 h-full w-full flex flex-col gap-6 m-8">
+                <div className="flex justify-between items-center w-full">
+                    <h1 className="text-2xl font-bold">Clientes</h1>
+
+                    <Link href="/customers/create">
+                        <Button className="bg-green-600 hover:bg-green-400">
+                            Agregar Cliente
+                        </Button>
+                    </Link>
+                </div>
 
                 <div className="flex items-center gap-5 w-full">
-                    <div className="relative flex-1 w-full">
+                    <div className="relative flex-1">
                         <Input
                             placeholder="Buscar clientes por nombre, teléfono o correo"
-                            className="pl-10 cursor-pointer"
+                            className="pl-10"
                             onChange={(e) => setSearch(e.target.value)}
                         />
-                        <Search
-                            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 cursor-pointer"
-                        />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     </div>
 
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button
-                                variant="outline"
-                                className="flex items-center gap-2 cursor-pointer"
-                            >
-                                <Filter className="h-4 w-4 cursor-pointer" /> Filtros
+                            <Button variant="outline" className="flex items-center gap-2">
+                                <Filter className="h-4 w-4" />
+                                Filtros
                             </Button>
                         </DialogTrigger>
 
@@ -137,20 +156,14 @@ export default function PageCustomers() {
                                             }))
                                         }
                                     >
-                                        <SelectTrigger className="cursor-pointer">
+                                        <SelectTrigger>
                                             <SelectValue placeholder="Selecciona estado" />
                                         </SelectTrigger>
 
                                         <SelectContent>
-                                            <SelectItem value="todos" className="cursor-pointer">
-                                                Todos
-                                            </SelectItem>
-                                            <SelectItem value="activos" className="cursor-pointer">
-                                                Activos
-                                            </SelectItem>
-                                            <SelectItem value="inactivos" className="cursor-pointer">
-                                                Inactivos
-                                            </SelectItem>
+                                            <SelectItem value="todos">Todos</SelectItem>
+                                            <SelectItem value="activos">Activos</SelectItem>
+                                            <SelectItem value="inactivos">Inactivos</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -163,20 +176,14 @@ export default function PageCustomers() {
                             handleSort(value as "id" | "nombre" | "created_at")
                         }
                     >
-                        <SelectTrigger className="w-[180px] cursor-pointer">
+                        <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Ordenar por:" />
                         </SelectTrigger>
 
                         <SelectContent>
-                            <SelectItem value="id" className="cursor-pointer">
-                                Por ID
-                            </SelectItem>
-                            <SelectItem value="nombre" className="cursor-pointer">
-                                Por nombre (A-Z)
-                            </SelectItem>
-                            <SelectItem value="created_at" className="cursor-pointer">
-                                Por fecha alta
-                            </SelectItem>
+                            <SelectItem value="id">Por ID</SelectItem>
+                            <SelectItem value="nombre">Por nombre (A-Z)</SelectItem>
+                            <SelectItem value="created_at">Por fecha alta</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -188,7 +195,18 @@ export default function PageCustomers() {
                 position="bottom-right"
                 autoClose={4000}
                 hideProgressBar
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
                 limit={1}
+                style={{
+                    width: "451px",
+                    minWidth: "451px",
+                    maxWidth: "451px",
+                }}
             />
         </>
     );

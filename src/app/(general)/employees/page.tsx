@@ -184,9 +184,25 @@ export default function PageEmployees() {
             <ToastContainer
                 position="bottom-right"
                 autoClose={4000}
-                hideProgressBar
+                hideProgressBar={true}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
                 limit={1}
+
+                style={{
+                    width: "451px",
+                    minWidth: "451px",
+                    maxWidth: "451px",
+
+
+                }}
+
             />
+        
         </>
     );
 }
