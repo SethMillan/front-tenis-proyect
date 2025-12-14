@@ -1,0 +1,87 @@
+#
+# Si quieren implementar algo asi, pueden hacerlo
+# esta rapido, solamente en el github tienen que 
+# meter los secrets MAIL_USERNAME, MAIL_PASSWORD, MAIL_TO
+# MAIL_USERNAME: su correo gmail
+# MAIL_PASSWORD: su app password, no su contraseña normal busquen en yt como sacarla
+# MAIL_TO: es el correo al que quieren que se envie la notificacion
+
+
+name: Notificaciones PR y Push
+
+on:
+  pull_request:   # Esto nomas pq lo pidio el profe
+    types: [opened, reopened, ready_for_review]
+  push:           # En caso de hacer push
+    branches:
+      - main    
+      - dev
+
+jobs:
+  notify-email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determinar tipo de evento
+        id: event-type
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "type=Pull Request" >> $GITHUB_OUTPUT
+            echo "title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+            echo "author=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
+            echo "url=${{ github.event.pull_request.html_url }}" >> $GITHUB_OUTPUT
+            echo "branch=${{ github.event.pull_request.head.ref }} → ${{ github.event.pull_request.base.ref }}" >> $GITHUB_OUTPUT
+          else
+            echo "type=Push" >> $GITHUB_OUTPUT
+            echo "title=${{ github.event.head_commit.message }}" >> $GITHUB_OUTPUT
+            echo "author=${{ github.event.head_commit.author.name }}" >> $GITHUB_OUTPUT
+            echo "url=${{ github.event.compare }}" >> $GITHUB_OUTPUT
+            echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Enviar notificación por email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "[${{ steps.event-type.outputs.type }}] ${{ steps.event-type.outputs.title }}"
+          to: ${{ secrets.MAIL_TO }}      # esto ya esta configurado en los secrets
+          from: GitHub Actions <${{ secrets.MAIL_USERNAME }}>
+          html_body: |
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background-color: #0366d6; color: white; padding: 20px; border-radius: 5px 5px 0 0; }
+                    .content { background-color: #f6f8fa; padding: 20px; border-radius: 0 0 5px 5px; }
+                    .field { margin: 10px 0; }
+                    .label { font-weight: bold; color: #586069; }
+                    .button { display: inline-block; padding: 10px 20px; background-color: #0366d6; color: white; text-decoration: none; border-radius: 5px; margin-top: 15px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h2>🔔 ${{ steps.event-type.outputs.type }} en ${{ github.repository }}</h2>
+                    </div>
+                    <div class="content">
+                        <div class="field">
+                            <span class="label">Tipo:</span> ${{ steps.event-type.outputs.type }}
+                        </div>
+                        <div class="field">
+                            <span class="label">Título:</span> ${{ steps.event-type.outputs.title }}
+                        </div>
+                        <div class="field">
+                            <span class="label">Autor:</span> ${{ steps.event-type.outputs.author }}
+                        </div>
+                        <div class="field">
+                            <span class="label">Branch:</span> ${{ steps.event-type.outputs.branch }}
+                        </div>
+                        <a href="${{ steps.event-type.outputs.url }}" class="button">Ver cambios</a>
+                    </div>
+                </div>
+            </body>
+            </html>
