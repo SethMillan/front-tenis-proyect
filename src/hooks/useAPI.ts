@@ -2,7 +2,7 @@
 
 import useSWR, { mutate } from 'swr';
 // aqui traigan las funciones de fetch que 
-import { fetchTenis, fetchByTenisId, fetchEmpleados, fetchClientes, fetchCategorias, fetchMarcas,fetchSales, fetchInventario } from '@/lib/api';
+import { fetchTenis, fetchByTenisId, fetchEmpleados, fetchClientes, fetchCategorias, fetchMarcas,fetchSales, fetchInventario, fetchSalesReportPDF } from '@/lib/api';
 import { Inventario, Marca, Producto, Venta } from '@/types/types';
 
 export function useTenis() {
@@ -50,4 +50,21 @@ export function useSales() {
 export function useInventario() {
   const { data, error, isLoading } = useSWR<Inventario[]>('/inventario', fetchInventario);
   return { inventario: data || [], isLoading, isError: !!error };
+}
+
+export function useSalesReportPDF() {
+  const generateReport = async (fechaInicio: string, fechaFin: string) => {
+    try {
+      const blob = await fetchSalesReportPDF(fechaInicio, fechaFin);
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      // Limpiar la URL después de abrir
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
+    } catch (error) {
+      console.error('Error generating sales report:', error);
+      throw error;
+    }
+  };
+
+  return { generateReport };
 }

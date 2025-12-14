@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Filter, List, Search } from "lucide-react";
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { TableSales } from "@/components/index";
+import { TableSales, SalesReportDialog } from "@/components/index";
 import { useState } from "react";
 import {
   Select,
@@ -44,6 +44,7 @@ const pageSales = () => {
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 cursor-pointer" />
           </div>
+          <SalesReportDialog />
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">

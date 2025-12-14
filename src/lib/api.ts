@@ -83,6 +83,30 @@ export async function updateCliente(id: number, data: any) {
 export async function fetchSales() {
   return apiRequest("/ventas");
 }
+
+export async function fetchSalesReportPDF(fechaInicio: string, fechaFin: string) {
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("token")
+      : null;
+
+  const url = new URL(`${API_URL}/ventas/reporte/pdf`);
+  url.searchParams.append("fechaInicio", fechaInicio);
+  url.searchParams.append("fechaFin", fechaFin);
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch sales report with status ${response.status}`);
+  }
+
+  return response.blob();
+}
+
 export async function fetchInventario(){
     return apiRequest('/inventario');
 }
