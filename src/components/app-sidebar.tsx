@@ -20,7 +20,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 const items = [
     {
         title: "Nueva Venta",
-        url: "#",
+        url: "/nueva-venta",
         icon: Plus,
     },
     {

@@ -10,6 +10,7 @@ type Props = {
   url_imagen: string;
   costo: string;
   rgb?: string;
+  onClick?: () => void;
 };
 
 const CardTenis = ({
@@ -20,6 +21,7 @@ const CardTenis = ({
   url_imagen,
   costo,
   rgb,
+  onClick,
 }: Props) => {
   const marcaLower = marca?.toLowerCase() || "";
   const imgRef = useRef<HTMLImageElement>(null);
@@ -79,6 +81,7 @@ const CardTenis = ({
         "transition-all duration-300 ease-in-out",
         "hover:scale-101 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
       )}
+      onClick={onClick}
     >
       {" "}
       <div
@@ -95,8 +98,8 @@ const CardTenis = ({
       <div className="pt-[238px] relative w-full flex flex-col gap-2 z-10">
         <div className="items-center w-full flex justify-center">
           <h3 className=" text-[#1A1A1A] text-[28px] italic font-extrabold">
-          {nombre}
-        </h3>
+            {nombre}
+          </h3>
         </div>
         <div className=" z-10 flex flex-col items-end gap-2 px-2 w-full">
           <p className=" text-black  text-xl font-light leading-normal">

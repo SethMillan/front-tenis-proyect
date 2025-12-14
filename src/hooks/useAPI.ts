@@ -2,8 +2,8 @@
 
 import useSWR, { mutate } from 'swr';
 // aqui traigan las funciones de fetch que 
-import { fetchTenis, fetchByTenisId, fetchEmpleados, fetchClientes, fetchCategorias, fetchMarcas,fetchSales, fetchInventario } from '@/lib/api';
-import { Inventario, Marca, Producto, Venta } from '@/types/types';
+import { fetchTenis, fetchByTenisId, fetchEmpleados, fetchClientes, fetchCategorias, fetchMarcas,fetchSales, fetchInventario, fetchSalesReportPDF } from '@/lib/api';
+import { Cliente, Inventario, Marca, Producto, Venta } from '@/types/types';
 
 export function useTenis() {
   const { data, error, isLoading, mutate } = useSWR<Producto[]>('/productos', fetchTenis,
@@ -30,7 +30,7 @@ export function useEmpleados() {
 
 
 export function useClientes() {
-  const { data, error, isLoading, mutate } = useSWR('/clientes', fetchClientes);
+  const { data, error, isLoading, mutate } = useSWR<Cliente[]>('/clientes', fetchClientes);
   return { clientes: data, isLoading, isError: error, mutate };
 }
 
@@ -50,4 +50,30 @@ export function useSales() {
 export function useInventario() {
   const { data, error, isLoading } = useSWR<Inventario[]>('/inventario', fetchInventario);
   return { inventario: data || [], isLoading, isError: !!error };
+}
+
+export function useSalesReportPDF(fechaInicio: string | null, fechaFin: string | null) {
+  const key = fechaInicio && fechaFin ? `/ventas/reporte/pdf?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}` : null;
+  
+  const { data, error, isLoading, mutate } = useSWR(key, () => fetchSalesReportPDF(fechaInicio!, fechaFin!), {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 60000, // evita duplicaciones en 1 minuto
+  });
+
+  const generateReport = () => {
+    if (data) {
+      const url = window.URL.createObjectURL(data);
+      window.open(url, '_blank');
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
+    }
+  };
+
+  return { 
+    blob: data, 
+    isLoading, 
+    isError: !!error, 
+    generateReport,
+    refetch: mutate
+  };
 }
