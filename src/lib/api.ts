@@ -84,6 +84,13 @@ export async function fetchSales() {
   return apiRequest("/ventas");
 }
 
+export async function createVenta(data: any) {
+  return apiRequest("/ventas", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function fetchSalesReportPDF(fechaInicio: string, fechaFin: string) {
   const token =
     typeof window !== "undefined"
