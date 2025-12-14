@@ -28,6 +28,7 @@ type CheckoutDialogProps = {
   }) => void;
   total: number;
   isProcessing: boolean;
+  clientes: any[];
 };
 
 const CheckoutDialog = ({
@@ -36,8 +37,8 @@ const CheckoutDialog = ({
   onConfirm,
   total,
   isProcessing,
+  clientes
 }: CheckoutDialogProps) => {
-  const { clientes = [] } = useClientes();
   const [clienteId, setClienteId] = useState<number | null>(null);
   const [tipoPago, setTipoPago] = useState<string>("Efectivo");
 

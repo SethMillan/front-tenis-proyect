@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useFuseSearch } from "@/hooks/useFuseSearch";
 import { fetchTenis } from "@/lib/api";
 import { Producto } from "@/types/types";
-import { useInventario, useMarcas, useTenis } from "@/hooks/useAPI";
+import { useClientes, useInventario, useMarcas, useTenis } from "@/hooks/useAPI";
 import { createVenta } from "@/lib/api";
 import { mutate } from "swr";
 import { Filter, List, Search } from "lucide-react";
@@ -26,25 +26,7 @@ const FUSE_OPTIONS = {
   threshold: 0.4,
 };
 
-const Page = () => {
-  const { tenis = [], isLoading, isError } = useTenis();
-  const [search, setSearch] = useState("");
-  const { inventario = [] } = useInventario();
-  const { marcas = [] } = useMarcas();
-
-  const [showPanel, setShowPanel] = useState(true);
-  const [selectedMarca, setSelectedMarca] = useState<number | null>(null); // <- Tambien planeo agregar varias marcas seleccionadas, quiza con un array pero se podra?
-  const [selectedTalla, setSelectedTalla] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null); // <- Planeo agregar filtro de color
-  const resultados = useFuseSearch<Producto>(tenis || [], search, FUSE_OPTIONS);
-  const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
-  const [checkoutData, setCheckoutData] = useState<{
-    cliente_id: number | null;
-    tipo_pago: string;
-  } | null>(null);
-
-  // ventas / detalle de venta
-  type SaleItem = {
+type SaleItem = {
     productoId: number;
     inventarioId: number;
     nombre: string;
@@ -54,18 +36,43 @@ const Page = () => {
     precio: number;
     url?: string;
   };
+
+const Page = () => {
+  //PRIMERO PONEMOS TODOS LOS HOKS
+  const { tenis = [], isLoading, isError } = useTenis();
+  const { inventario = [] } = useInventario();
+  const { marcas = [] } = useMarcas();
+  const { clientes = [] } = useClientes(); 
+
+  // LUEGO LOS USESTATE
+  const [search, setSearch] = useState("");
+  const [showPanel, setShowPanel] = useState(true);
+  const [selectedMarca, setSelectedMarca] = useState<number | null>(null); // <- Tambien planeo agregar varias marcas seleccionadas, quiza con un array pero se podra?
+  const [selectedTalla, setSelectedTalla] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null); // <- Planeo agregar filtro de color
+  const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
+  const [checkoutData, setCheckoutData] = useState<{
+    cliente_id: number | null;
+    tipo_pago: string;
+  } | null>(null);
+
+  // ventas / detalle de venta
+  
   const [saleDetails, setSaleDetails] = useState<SaleItem[]>([]);
 
   // modal para elegir talla/color cuando se selecciona un producto
   const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
   const [isPickOpen, setIsPickOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
+
 
   //?normalmente hariamos algo como esto para obtener las tallas
   //?pero gasta muchos recursos, hace el calculo cada que se renderiza el componente
   //const tallasDisponibles = [...new Set(inventario.filter((item) => item.cantidad > 0).map((item) => item.talla))]
   //?por eso usamos useMemo para memorizar el resultado y solo recalcularlo cuando inventario cambie
-  //! recibe dos argumentos, una funcion que retorna el valor a memorizar y un array de dependencias
-  //!el valor se recalcula solo cuando alguna dependencia cambia
+  //? recibe dos argumentos, una funcion que retorna el valor a memorizar y un array de dependencias
+  //?el valor se recalcula solo cuando alguna dependencia cambia
   const tallasDisponibles = useMemo(() => {
     return [
       ...new Set(
@@ -73,18 +80,21 @@ const Page = () => {
       ),
     ];
   }, [inventario]);
+
   const coloresDisponibles = useMemo(() => {
     return [...new Set(tenis.map((item) => item.color))];
   }, [tenis]);
 
   console.log(coloresDisponibles);
+  const resultados = useFuseSearch<Producto>(tenis || [], search, FUSE_OPTIONS);
 
   // como ahora filtramos por marca y talla ya no podemos hacer esto, usaremos otro useMemo
   // var filteredResults = selectedMarca?resultados.filter((producto) => producto.marcas.id === selectedMarca ): resultados;
   const filteredResults = useMemo(() => {
     let filtered = resultados;
-    //!podriamos usar esto pero creo que seria mejor si ponemos algo como "producto no disponible" o algo asi
-    //filtered = filtered.filter((item) => item.inventarios.some((inv)=>inv.cantidad>0));
+    // podriamos usar esto pero creo que seria mejor si ponemos algo como "producto no disponible" o algo asi
+    // mejor si lo usamos para filtrar los productos que no tienen inventario disponible
+    filtered = filtered.filter((item) => item.inventarios.some((inv)=>inv.cantidad>0));
     if (selectedMarca) {
       filtered = filtered.filter((item) => item.marcas.id === selectedMarca);
     }
@@ -177,7 +187,6 @@ const Page = () => {
     );
   }
 
-  const [isClosing, setIsClosing] = useState(false);
 
   function openCheckout() {
     if (saleDetails.length === 0) {
@@ -442,6 +451,7 @@ const Page = () => {
         onConfirm={closeSale}
         total={saleDetails.reduce((s, it) => s + it.qty * it.precio, 0)}
         isProcessing={isClosing}
+        clientes={clientes}
       />
     </>
   );
