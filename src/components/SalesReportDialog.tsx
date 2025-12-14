@@ -17,37 +17,30 @@ export function SalesReportDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { generateReport } = useSalesReportPDF();
+  const [validationError, setValidationError] = useState<string | null>(null);
 
-  const handleGenerateReport = async () => {
-    // Validar que ambas fechas estén seleccionadas
+  const { isLoading, isError, generateReport, blob } = useSalesReportPDF(
+    isOpen && dateFrom ? dateFrom : null,
+    isOpen && dateTo ? dateTo : null
+  );
+
+  const handleGenerateReport = () => {
     if (!dateFrom || !dateTo) {
-      setError("Por favor selecciona un rango de fechas válido");
+      setValidationError("Por favor selecciona un rango de fechas válido");
       return;
     }
-
-    // Validar que la fecha de inicio sea anterior a la de fin
     if (dateFrom > dateTo) {
-      setError("La fecha de inicio debe ser anterior a la fecha de fin");
+      setValidationError("La fecha de inicio debe ser anterior a la fecha de fin");
       return;
     }
 
-    try {
-      setIsLoading(true);
-      setError(null);
-      await generateReport(dateFrom, dateTo);
-      // Cerrar el diálogo después de generar el reporte
+    setValidationError(null);
+    generateReport();
+    
+    if (!isError && blob) {
       setIsOpen(false);
-      // Limpiar los campos
       setDateFrom("");
       setDateTo("");
-    } catch (err) {
-      setError("Error al generar el reporte. Por favor intenta de nuevo.");
-      console.error(err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -71,7 +64,7 @@ export function SalesReportDialog() {
               value={dateFrom}
               onChange={(e) => {
                 setDateFrom(e.target.value);
-                setError(null);
+                setValidationError(null);
               }}
               disabled={isLoading}
             />
@@ -85,15 +78,15 @@ export function SalesReportDialog() {
               value={dateTo}
               onChange={(e) => {
                 setDateTo(e.target.value);
-                setError(null);
+                setValidationError(null);
               }}
               disabled={isLoading}
             />
           </div>
 
-          {error && (
+          {(validationError || isError) && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
-              {error}
+              {validationError || "Error al generar el reporte. Por favor intenta de nuevo."}
             </div>
           )}
 

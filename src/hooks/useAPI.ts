@@ -52,19 +52,28 @@ export function useInventario() {
   return { inventario: data || [], isLoading, isError: !!error };
 }
 
-export function useSalesReportPDF() {
-  const generateReport = async (fechaInicio: string, fechaFin: string) => {
-    try {
-      const blob = await fetchSalesReportPDF(fechaInicio, fechaFin);
-      const url = window.URL.createObjectURL(blob);
+export function useSalesReportPDF(fechaInicio: string | null, fechaFin: string | null) {
+  const key = fechaInicio && fechaFin ? `/ventas/reporte/pdf?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}` : null;
+  
+  const { data, error, isLoading, mutate } = useSWR(key, () => fetchSalesReportPDF(fechaInicio!, fechaFin!), {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 60000, // evita duplicaciones en 1 minuto
+  });
+
+  const generateReport = () => {
+    if (data) {
+      const url = window.URL.createObjectURL(data);
       window.open(url, '_blank');
-      // Limpiar la URL después de abrir
       setTimeout(() => window.URL.revokeObjectURL(url), 100);
-    } catch (error) {
-      console.error('Error generating sales report:', error);
-      throw error;
     }
   };
 
-  return { generateReport };
+  return { 
+    blob: data, 
+    isLoading, 
+    isError: !!error, 
+    generateReport,
+    refetch: mutate
+  };
 }
