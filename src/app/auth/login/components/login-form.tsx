@@ -1,135 +1,284 @@
 "use client";
 
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Customer } from "@/types/types";
+import { Pencil } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import z from "zod";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { authService } from "@/features/auth/auth-service";
 import { toast } from "react-toastify";
+import { updateCliente } from "@/lib/api";
+import { useClientes } from "@/hooks/useAPI";
+import z from "zod";
 
-const loginSchema = z.object({
-  email: z.email({ message: "El email no es valido" }),
-  password: z.string().min(6, { message: "Debe tener al menos 6 caracteres" }),
+
+const updateCustomerSchema = z.object({
+    telefono: z
+        .string()
+        .optional()
+        .refine(
+            (val) => !val || /^\d{10,15}$/.test(val),
+            "El teléfono debe tener entre 10 y 15 dígitos"
+        ),
+
+    email: z
+        .string()
+        .optional()
+        .refine(
+            (val) =>
+                !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+            "El correo no es válido"
+        ),
+
+    password: z
+        .string()
+        .optional()
+        .refine(
+            (val) => !val || val.length >= 6,
+            "La contraseña debe tener al menos 6 caracteres"
+        ),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
 
-const LoginForm = () => {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
+export function TableCustomers({
+    data,
+    onRowClick,
+}: {
+    data: Customer[];
+    onRowClick?: (customer: Customer) => void;
+}) {
+    const { mutate } = useClientes();
+    const [editData, setEditData] = useState<Customer | null>(null);
+    const [openModal, setOpenModal] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-  const onSubmit = form.handleSubmit(async (data) => {
-    setIsLoading(true);
+    const openEditModal = (customer: Customer) => {
+        setEditData({ ...customer });
+        setOpenModal(true);
+    };
 
-    try {
-      const res = await authService.login(data);
+    const formatDate = (dateString?: string | null) => {
+        if (!dateString) return "—";
+        return new Date(dateString).toLocaleDateString("es-MX");
+    };
 
-      if (!res.ok) {
-        toast.error("Usuario o contraseña incorrectos", {
-          toastId: "login-error",
+    const handleUpdate = async () => {
+        if (!editData) return;
+
+        // 🔒 VALIDACIÓN
+        const validation = updateCustomerSchema.safeParse({
+            telefono: editData.telefono,
+            email: editData.email,
         });
-        return;
-      }
 
-      toast.success("Inicio de sesión exitoso", {
-        toastId: "login-success",
-      });
+        if (!validation.success) {
+            validation.error.errors.forEach((err) => {
+                toast.error(err.message);
+            });
+            return;
+        }
 
-      router.push("/home");
-    } catch (error) {
-      toast.error("Error de conexión con el servidor", {
-        toastId: "login-connection-error",
-      });
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  });
+        setLoading(true);
 
-  return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full">
-      <Form {...form}>
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs dark:text-[#E0E0E0]">
-                Usuario
-              </FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="Ingresa tu usuario"
-                  className="!text-sm p-5 dark:text-[#777979] dark:border-none"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </Form>
+        try {
+            const payload = {
+                nombres: editData.nombres,
+                apellido_p: editData.apellido_p,
+                apellido_m: editData.apellido_m || undefined,
+                telefono: editData.telefono || undefined,
+                email: editData.email || undefined,
+                activo: editData.activo,
+            };
 
-      <Form {...form}>
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs dark:text-[#E0E0E0]">
-                Contraseña
-              </FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  type="password"
-                  placeholder="Ingresa tu contraseña"
-                  className="!text-sm p-5 dark:text-[#777979] dark:border-none"
-                />
-              </FormControl>
-              <FormMessage />
-              <Link
-                href="#"
-                className="block text-sm pt-2 text-right text-[#3188fd] hover:underline"
-              >
-                ¿Olvidaste tu contraseña?
-              </Link>
-            </FormItem>
-          )}
-        />
-      </Form>
+            await updateCliente(editData.id, payload);
 
-      <div className="flex justify-center">
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-[#3188fd] hover:bg-[#72b9fe] px-8 py-6"
-        >
-          {isLoading ? "Iniciando sesión..." : "Login"}
-        </Button>
-      </div>
-    </form>
-  );
-};
+            toast.success("Cliente actualizado correctamente", {
+                toastId: "cliente-update-success",
+            });
 
-export default LoginForm;
+            mutate();
+            setOpenModal(false);
+        } catch (error: any) {
+            toast.error(
+                error.message || "Error al actualizar el cliente",
+                { toastId: "cliente-update-error" }
+            );
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Nombre</TableHead>
+                        <TableHead>Teléfono</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Fecha Nac.</TableHead>
+                        <TableHead>Activo</TableHead>
+                        <TableHead>Fecha Alta</TableHead>
+                        <TableHead className="text-center">Acciones</TableHead>
+                    </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                    {data.map((c) => (
+                        <TableRow
+                            key={c.id}
+                            className={
+                                onRowClick ? "cursor-pointer hover:bg-gray-50" : ""
+                            }
+                            onClick={() => onRowClick?.(c)}
+                        >
+                            <TableCell>{c.id}</TableCell>
+                            <TableCell>
+                                {c.nombres} {c.apellido_p} {c.apellido_m ?? ""}
+                            </TableCell>
+                            <TableCell>{c.telefono ?? "—"}</TableCell>
+                            <TableCell>{c.email ?? "—"}</TableCell>
+                            <TableCell>
+                                {c.fecha_nacimiento
+                                    ? formatDate(c.fecha_nacimiento)
+                                    : "—"}
+                            </TableCell>
+                            <TableCell>
+                                {c.activo ? (
+                                    <span className="text-green-600 font-semibold">
+                                        Activo
+                                    </span>
+                                ) : (
+                                    <span className="text-red-600 font-semibold">
+                                        Inactivo
+                                    </span>
+                                )}
+                            </TableCell>
+                            <TableCell>{formatDate(c.created_at)}</TableCell>
+
+                            <TableCell className="text-center">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        openEditModal(c);
+                                    }}
+                                    className="text-blue-600 hover:text-blue-800"
+                                >
+                                    <Pencil size={18} />
+                                </button>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+
+            <Dialog open={openModal} onOpenChange={setOpenModal}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Editar Cliente</DialogTitle>
+                    </DialogHeader>
+
+                    {editData && (
+                        <div className="space-y-4 mt-2">
+                            <div>
+                                <Label>Nombres</Label>
+                                <Input
+                                    value={editData.nombres}
+                                    onChange={(e) =>
+                                        setEditData({ ...editData, nombres: e.target.value })
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <Label>Apellido Paterno</Label>
+                                <Input
+                                    value={editData.apellido_p}
+                                    onChange={(e) =>
+                                        setEditData({ ...editData, apellido_p: e.target.value })
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <Label>Apellido Materno</Label>
+                                <Input
+                                    value={editData.apellido_m ?? ""}
+                                    onChange={(e) =>
+                                        setEditData({ ...editData, apellido_m: e.target.value })
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <Label>Teléfono</Label>
+                                <Input
+                                    value={editData.telefono ?? ""}
+                                    maxLength={15}
+                                    onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, "");
+                                        setEditData({ ...editData, telefono: value });
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <Label>Email</Label>
+                                <Input
+                                    value={editData.email ?? ""}
+                                    onChange={(e) =>
+                                        setEditData({ ...editData, email: e.target.value })
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <Label>Activo</Label>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <Switch
+                                        checked={editData.activo ?? false}
+                                        onCheckedChange={(value) =>
+                                            setEditData({ ...editData, activo: value })
+                                        }
+                                    />
+                                    <span>
+                                        {editData.activo ? "Activo" : "Inactivo"}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setOpenModal(false)}>
+                            Cerrar
+                        </Button>
+
+                        <Button onClick={handleUpdate} disabled={loading}>
+                            {loading ? "Guardando..." : "Guardar cambios"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
+    );
+}

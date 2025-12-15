@@ -116,8 +116,8 @@ export default function PageCustomers() {
                     <h1 className="text-2xl font-bold">Clientes</h1>
 
                     <Link href="/customers/create">
-                        <Button className="bg-green-600 hover:bg-green-400">
-                            Agregar Cliente
+                        <Button className="hover:bg-green-200 border-1 border-gray-200 bg-gray-50 text-gray-800">
+                                                        Registrar Cliente
                         </Button>
                     </Link>
                 </div>
