@@ -8,7 +8,7 @@ import { Producto } from "@/types/types";
 import { useClientes, useInventario, useMarcas, useTenis } from "@/hooks/useAPI";
 import { createVenta } from "@/lib/api";
 import { mutate } from "swr";
-import { Filter, List, Search } from "lucide-react";
+import { Filter, List, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -317,18 +317,21 @@ const Page = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p>Cargando productos...</p>
+      <div className="flex justify-center items-center py-8 w-full">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <span className="ml-2">Cargando productos...</span>
       </div>
     );
   }
+
   if (isError) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex justify-center items-center py-8 w-full text-red-500">
         <p>Error al cargar los productos</p>
       </div>
     );
   }
+
 
   return (
     <>

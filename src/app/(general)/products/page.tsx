@@ -10,7 +10,7 @@ import { useFuseSearch } from "@/hooks/useFuseSearch";
 import { useTenis, useCategorias, useMarcas } from "@/hooks/useAPI";
 
 import { Categoria, Marca, Producto } from "@/types/types";
-import { Filter, List, Search } from "lucide-react";
+import { Filter, List, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -70,20 +70,22 @@ const page = () => {
     const resultados = useFuseSearch(tenis || [], search, FUSE_OPTIONS);
 
     if (isLoading) {
-        return (
-            <div className="flex justify-center items-center h-screen text-center">
-                <p>Cargando productos...</p>
-            </div>
-        );
-    }
+    return (
+      <div className="flex justify-center items-center py-8 w-full">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <span className="ml-2">Cargando productos...</span>
+      </div>
+    );
+  }
 
-    if (isError) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <p>Error al cargar los productos</p>
-            </div>
-        );
-    }
+  if (isError) {
+    return (
+      <div className="flex justify-center items-center py-8 w-full text-red-500">
+        <p>Error al cargar las productos</p>
+      </div>
+    );
+  }
+
     
     const processedProducts = useMemo(() => {
         if (!tenis) return [];

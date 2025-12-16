@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Empleado } from "@/types/types";
-import { Pencil } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -163,7 +163,10 @@ export function TableEmployees({ data }: Props) {
           {uniqueEmployees.length === 0 && (
             <TableRow>
               <TableCell colSpan={8} className="text-center py-6 text-gray-500">
-                No se encontraron empleados
+                <div className="flex justify-center items-center">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="ml-2">Cargando empleados...</span>
+                </div>
               </TableCell>
             </TableRow>
           )}
