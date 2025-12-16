@@ -91,6 +91,85 @@ export async function createVenta(data: any) {
   });
 }
 
+export async function createProduct(data: any) {
+  return apiRequest("/productos", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateProduct(id: number, data: any) {
+  return apiRequest(`/productos/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteProduct(id: number) {
+  return apiRequest(`/productos/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function uploadProductImage(imageFile: File) {
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("token")
+      : null;
+
+  const formData = new FormData();
+  formData.append("file", imageFile); // la imagen
+  formData.append("upload_preset", "tenis-tis"); // tu preset configurado en Cloudinary
+  formData.append("folder", "tenis/productos"); // carpeta destino en Cloudinary
+
+  const response = await fetch("https://api.cloudinary.com/v1_1/dkbaexswa/image/upload", {
+    method: "POST",
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to upload image with status ${response.status}`);
+  }
+
+  return response.json(); // devuelve el JSON con la URL pública, secure_url, etc.
+}
+
+export async function createImagenProducto(data: any) {
+  return apiRequest("/imagenes-productos", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteImagenProducto(id: number) {
+  return apiRequest(`/imagenes-productos/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function createTalla(data: any) {
+  return apiRequest("/inventario", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateTalla(id: number, data: any) {
+  return apiRequest(`/inventario/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteTalla(id: number) {
+  return apiRequest(`/inventario/${id}`, {
+    method: "DELETE",
+  });
+}
+
 export async function fetchSalesReportPDF(fechaInicio: string, fechaFin: string) {
   const token =
     typeof window !== "undefined"
