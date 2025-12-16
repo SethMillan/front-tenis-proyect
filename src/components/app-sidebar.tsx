@@ -24,11 +24,6 @@ const items = [
         icon: Plus,
     },
     {
-        title: "Home",
-        url: "/home",
-        icon: Home,
-    },
-    {
         title: "Ventas",
         url: "/sales",
         icon: DollarSign,
@@ -47,11 +42,6 @@ const items = [
         title: "Empleados",
         url: "/employees",
         icon: User,
-    },
-    {
-        title: "Estadísticas",
-        url: "#",
-        icon: TrendingUp,
     },
 ];
 
