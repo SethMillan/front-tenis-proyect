@@ -66,6 +66,37 @@ const Page = () => {
   const [isPickOpen, setIsPickOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
+  // usamos cargando como useState porque sin este como que falla el cache, esta raro
+const [cargado, setCargado] = useState(false); 
+
+// aqui vamos a manejar el cache
+useEffect(() => {
+  console.log('Buscando en local storage...');
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('carritoVentas');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        console.log('Carrito recuperado:', parsed);
+        setSaleDetails(parsed);
+      } catch (error) {
+        console.error('Error cargando carrito:', error);
+      }
+    } else {
+      console.log('No hay carrito guardado');
+    }
+  }
+  setCargado(true); // aqui cambiamos el estado de cargando
+}, []);
+
+useEffect(() => {
+  if (cargado && typeof window !== 'undefined') { 
+    console.log('Guardando carrito:', saleDetails);
+    localStorage.setItem('carritoVentas', JSON.stringify(saleDetails));
+  }
+}, [saleDetails, cargado]); // agregamos cargando a las dependencias
+
+
 
 
   //?normalmente hariamos algo como esto para obtener las tallas
@@ -291,6 +322,9 @@ const Page = () => {
       mutate("/inventario");
       mutate("/productos");
       setSaleDetails([]);
+      localStorage.removeItem('carritoVentas'); // vaciamos el carrito del local storage
+      console.log("Venta creada:", res);
+      console.log("Local storage limpiado");
       setShowPanel(false);
       setShowCheckoutDialog(false);
 
