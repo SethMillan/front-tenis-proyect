@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Empleado } from "@/types/types";
-import { Pencil } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,10 +21,32 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useEmpleados } from "@/hooks/useAPI";
 import { updateEmpleado } from "@/lib/api";
 import { toast } from "react-toastify";
+
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const editEmpleadoSchema = z.object({
+  nombre: z.string().min(2, "Debe tener al menos 2 caracteres"),
+  apellido_p: z.string().min(2, "Debe tener al menos 2 caracteres"),
+  apellido_m: z.string().optional(),
+  telefono: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^\d{10,15}$/.test(val),
+      "El teléfono debe tener entre 10 y 15 dígitos"
+    ),
+  email: z.string().email("Correo no válido").optional(),
+  rol: z.enum(["Admin", "Employee"]),
+  activo: z.boolean(),
+});
+
+type EditEmpleadoForm = z.infer<typeof editEmpleadoSchema>;
 
 type Props = {
   data: Empleado[];
@@ -32,61 +54,64 @@ type Props = {
 
 export function TableEmployees({ data }: Props) {
   const { mutate } = useEmpleados();
-  const [editData, setEditData] = useState<Empleado | null>(null);
   const [openModal, setOpenModal] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [currentId, setCurrentId] = useState<number | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<EditEmpleadoForm>({
+    resolver: zodResolver(editEmpleadoSchema),
+  });
+
+  const activoValue = watch("activo");
 
   const uniqueEmployees = useMemo(() => {
-    if (!data) return [];
     const map = new Map<number, Empleado>();
-    data.forEach((emp) => map.set(emp.id, emp));
+    data?.forEach((e) => map.set(e.id, e));
     return Array.from(map.values());
   }, [data]);
 
   const openEditModal = (emp: Empleado) => {
-    setEditData({ ...emp });
+    setCurrentId(emp.id);
+    reset({
+      nombre: emp.nombre,
+      apellido_p: emp.apellido_p,
+      apellido_m: emp.apellido_m ?? "",
+      telefono: emp.telefono ?? "",
+      email: emp.email ?? "",
+      rol: emp.rol,
+      activo: emp.activo ?? false,
+    });
     setOpenModal(true);
+  };
+
+  const onSubmit = async (data: EditEmpleadoForm) => {
+    if (!currentId) return;
+
+    try {
+      await updateEmpleado(currentId, {
+        ...data,
+        apellido_m: data.apellido_m || undefined,
+        telefono: data.telefono || undefined,
+        email: data.email || undefined,
+      });
+
+      toast.success("Empleado actualizado correctamente");
+      mutate();
+      setOpenModal(false);
+    } catch (error: any) {
+      toast.error(error.message || "Error al actualizar el empleado");
+    }
   };
 
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "—";
     return new Date(dateString).toLocaleDateString("es-MX");
-  };
-
-  const handleUpdate = async () => {
-    if (!editData) return;
-
-    setLoading(true);
-
-    try {
-      const payload = {
-        nombre: editData.nombre,
-        apellido_p: editData.apellido_p,
-        apellido_m: editData.apellido_m || undefined,
-        telefono: editData.telefono || undefined,
-        email: editData.email || undefined,
-        rol: editData.rol,
-      };
-
-      await updateEmpleado(editData.id, payload);
-
-      toast.success("Empleado actualizado correctamente", {
-        toastId: "empleado-update-success",
-      });
-
-      mutate();
-      setOpenModal(false);
-    } catch (error: any) {
-      toast.error(
-        error.message || "Error al actualizar el empleado",
-        {
-          toastId: "empleado-update-error",
-        }
-      );
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -138,7 +163,10 @@ export function TableEmployees({ data }: Props) {
           {uniqueEmployees.length === 0 && (
             <TableRow>
               <TableCell colSpan={8} className="text-center py-6 text-gray-500">
-                No se encontraron empleados
+                <div className="flex justify-center items-center">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="ml-2">Cargando empleados...</span>
+                </div>
               </TableCell>
             </TableRow>
           )}
@@ -151,91 +179,84 @@ export function TableEmployees({ data }: Props) {
             <DialogTitle>Editar Empleado</DialogTitle>
           </DialogHeader>
 
-          {editData && (
-            <div className="space-y-4 mt-2">
-              <div>
-                <Label>Nombre</Label>
-                <Input
-                  value={editData.nombre}
-                  onChange={(e) =>
-                    setEditData({ ...editData, nombre: e.target.value })
-                  }
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
+            <div>
+              <Label>Nombre</Label>
+              <Input {...register("nombre")} />
+              {errors.nombre && (
+                <p className="text-red-500 text-sm">{errors.nombre.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label>Apellido Paterno</Label>
+              <Input {...register("apellido_p")} />
+              {errors.apellido_p && (
+                <p className="text-red-500 text-sm">
+                  {errors.apellido_p.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label>Apellido Materno</Label>
+              <Input {...register("apellido_m")} />
+            </div>
+
+            <div>
+              <Label>Rol</Label>
+              <select
+                {...register("rol")}
+                className="w-full border rounded px-3 py-2"
+              >
+                <option value="Admin">Admin</option>
+                <option value="Employee">Employee</option>
+              </select>
+            </div>
+
+            <div>
+              <Label>Teléfono</Label>
+              <Input {...register("telefono")} />
+              {errors.telefono && (
+                <p className="text-red-500 text-sm">
+                  {errors.telefono.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label>Email</Label>
+              <Input type="email" {...register("email")} />
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label>Activo</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <Switch
+                  checked={activoValue}
+                  onCheckedChange={(v) => setValue("activo", v)}
                 />
-              </div>
-
-              <div>
-                <Label>Apellido Paterno</Label>
-                <Input
-                  value={editData.apellido_p}
-                  onChange={(e) =>
-                    setEditData({ ...editData, apellido_p: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label>Apellido Materno</Label>
-                <Input
-                  value={editData.apellido_m ?? ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, apellido_m: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label>Rol</Label>
-                <select
-                  value={editData.rol}
-                  onChange={(e) =>
-                    setEditData({ ...editData, rol: e.target.value as any })
-                  }
-                  className="w-full border rounded px-3 py-2"
-                >
-                  <option value="Admin">Admin</option>
-                  <option value="Employee">Employee</option>
-                </select>
-              </div>
-
-              <div>
-                <Label>Teléfono</Label>
-                <Input
-                  value={editData.telefono ?? ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, telefono: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label>Email</Label>
-                <Input
-                  value={editData.email ?? ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, email: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label>Activo</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Switch disabled checked={editData.activo ?? false} />
-                  <span>{editData.activo ? "Activo" : "Inactivo"}</span>
-                </div>
+                <span>{activoValue ? "Activo" : "Inactivo"}</span>
               </div>
             </div>
-          )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenModal(false)}>
-              Cerrar
-            </Button>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpenModal(false)}
+              >
+                Cerrar
+              </Button>
 
-            <Button onClick={handleUpdate} disabled={loading}>
-              {loading ? "Guardando..." : "Guardar cambios"}
-            </Button>
-          </DialogFooter>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Guardando..." : "Guardar cambios"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </>

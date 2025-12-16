@@ -1,235 +1,248 @@
 "use client";
 
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { Customer } from "@/types/types";
 import { Pencil } from "lucide-react";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { toast } from "react-toastify";
 import { updateCliente } from "@/lib/api";
 import { useClientes } from "@/hooks/useAPI";
 
+import { useState, useEffect } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+
+const editClienteSchema = z.object({
+  nombres: z.string().min(2, "Debe tener al menos 2 caracteres"),
+  apellido_p: z.string().min(2, "Debe tener al menos 2 caracteres"),
+  apellido_m: z.string().optional(),
+
+  telefono: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^\d{10,15}$/.test(val),
+      "El teléfono debe tener entre 10 y 15 dígitos"
+    ),
+
+  email: z.string().email("Correo no válido").optional(),
+  activo: z.boolean(),
+});
+
+type EditClienteForm = z.infer<typeof editClienteSchema>;
+
 export function TableCustomers({
-    data,
-    onRowClick,
+  data,
+  onRowClick,
 }: {
-    data: Customer[];
-    onRowClick?: (customer: Customer) => void;
+  data: Customer[];
+  onRowClick?: (customer: Customer) => void;
 }) {
-    const { mutate } = useClientes();
-    const [editData, setEditData] = useState<Customer | null>(null);
-    const [openModal, setOpenModal] = useState(false);
-    const [loading, setLoading] = useState(false);
+  const { mutate } = useClientes();
+  const [openModal, setOpenModal] = useState(false);
+  const [currentId, setCurrentId] = useState<number | null>(null);
 
-    const openEditModal = (customer: Customer) => {
-        setEditData({ ...customer });
-        setOpenModal(true);
-    };
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<EditClienteForm>({
+    resolver: zodResolver(editClienteSchema),
+  });
 
-    const formatDate = (dateString?: string | null) => {
-        if (!dateString) return "—";
-        return new Date(dateString).toLocaleDateString("es-MX");
-    };
+  const activoValue = watch("activo");
 
-    const handleUpdate = async () => {
-        if (!editData) return;
+  const openEditModal = (customer: Customer) => {
+    setCurrentId(customer.id);
 
-        setLoading(true);
+    reset({
+      nombres: customer.nombres,
+      apellido_p: customer.apellido_p,
+      apellido_m: customer.apellido_m ?? "",
+      telefono: customer.telefono ?? "",
+      email: customer.email ?? "",
+      activo: customer.activo ?? false,
+    });
 
-        try {
-            const payload = {
-                nombres: editData.nombres,
-                apellido_p: editData.apellido_p,
-                apellido_m: editData.apellido_m || undefined,
-                telefono: editData.telefono || undefined,
-                email: editData.email || undefined,
-            };
+    setOpenModal(true);
+  };
 
-            await updateCliente(editData.id, payload);
+  const onSubmit = async (data: EditClienteForm) => {
+    if (!currentId) return;
 
-            toast.success("Cliente actualizado correctamente", {
-                toastId: "cliente-update-success",
-            });
+    try {
+      await updateCliente(currentId, {
+        ...data,
+        apellido_m: data.apellido_m || undefined,
+        telefono: data.telefono || undefined,
+        email: data.email || undefined,
+      });
 
-            mutate();
-            setOpenModal(false);
-        } catch (error: any) {
-            toast.error(
-                error.message || "Error al actualizar el cliente",
-                {
-                    toastId: "cliente-update-error",
-                }
-            );
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
+      toast.success("Cliente actualizado correctamente");
+      mutate();
+      setOpenModal(false);
+    } catch (error: any) {
+      toast.error(error.message || "Error al actualizar el cliente");
+    }
+  };
 
-    return (
-        <>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Nombre</TableHead>
-                        <TableHead>Teléfono</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Fecha Nac.</TableHead>
-                        <TableHead>Activo</TableHead>
-                        <TableHead>Fecha Alta</TableHead>
-                        <TableHead className="text-center">Acciones</TableHead>
-                    </TableRow>
-                </TableHeader>
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return "—";
+    return new Date(dateString).toLocaleDateString("es-MX");
+  };
 
-                <TableBody>
-                    {data.map((c) => (
-                        <TableRow
-                            key={c.id}
-                            className={
-                                onRowClick ? "cursor-pointer hover:bg-gray-50" : ""
-                            }
-                            onClick={() => onRowClick?.(c)}
-                        >
-                            <TableCell>{c.id}</TableCell>
-                            <TableCell>
-                                {c.nombres} {c.apellido_p} {c.apellido_m ?? ""}
-                            </TableCell>
-                            <TableCell>{c.telefono ?? "—"}</TableCell>
-                            <TableCell>{c.email ?? "—"}</TableCell>
-                            <TableCell>
-                                {c.fecha_nacimiento
-                                    ? formatDate(c.fecha_nacimiento)
-                                    : "—"}
-                            </TableCell>
-                            <TableCell>
-                                {c.activo ? (
-                                    <span className="text-green-600 font-semibold">
-                                        Activo
-                                    </span>
-                                ) : (
-                                    <span className="text-red-600 font-semibold">
-                                        Inactivo
-                                    </span>
-                                )}
-                            </TableCell>
-                            <TableCell>{formatDate(c.created_at)}</TableCell>
+  return (
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>ID</TableHead>
+            <TableHead>Nombre</TableHead>
+            <TableHead>Teléfono</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Fecha Nac.</TableHead>
+            <TableHead>Activo</TableHead>
+            <TableHead>Fecha Alta</TableHead>
+            <TableHead className="text-center">Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
 
-                            <TableCell className="text-center">
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        openEditModal(c);
-                                    }}
-                                    className="text-blue-600 hover:text-blue-800 cursor-pointer"
-                                >
-                                    <Pencil size={18} />
-                                </button>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+        <TableBody>
+          {data.map((c) => (
+            <TableRow
+              key={c.id}
+              className={onRowClick ? "cursor-pointer hover:bg-gray-50" : ""}
+              onClick={() => onRowClick?.(c)}
+            >
+              <TableCell>{c.id}</TableCell>
+              <TableCell>
+                {c.nombres} {c.apellido_p} {c.apellido_m ?? ""}
+              </TableCell>
+              <TableCell>{c.telefono ?? "—"}</TableCell>
+              <TableCell>{c.email ?? "—"}</TableCell>
+              <TableCell>{formatDate(c.fecha_nacimiento)}</TableCell>
+              <TableCell>
+                {c.activo ? (
+                  <span className="text-green-600 font-semibold">Activo</span>
+                ) : (
+                  <span className="text-red-600 font-semibold">Inactivo</span>
+                )}
+              </TableCell>
+              <TableCell>{formatDate(c.created_at)}</TableCell>
 
-            <Dialog open={openModal} onOpenChange={setOpenModal}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Editar Cliente</DialogTitle>
-                    </DialogHeader>
+              <TableCell className="text-center">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEditModal(c);
+                  }}
+                  className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                >
+                  <Pencil size={18} />
+                </button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
-                    {editData && (
-                        <div className="space-y-4 mt-2">
-                            <div>
-                                <Label>Nombres</Label>
-                                <Input
-                                    value={editData.nombres}
-                                    onChange={(e) =>
-                                        setEditData({ ...editData, nombres: e.target.value })
-                                    }
-                                />
-                            </div>
+      <Dialog open={openModal} onOpenChange={setOpenModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Cliente</DialogTitle>
+          </DialogHeader>
 
-                            <div>
-                                <Label>Apellido Paterno</Label>
-                                <Input
-                                    value={editData.apellido_p}
-                                    onChange={(e) =>
-                                        setEditData({ ...editData, apellido_p: e.target.value })
-                                    }
-                                />
-                            </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
+            <div>
+              <Label>Nombres</Label>
+              <Input {...register("nombres")} />
+              {errors.nombres && (
+                <p className="text-red-500 text-sm">{errors.nombres.message}</p>
+              )}
+            </div>
 
-                            <div>
-                                <Label>Apellido Materno</Label>
-                                <Input
-                                    value={editData.apellido_m ?? ""}
-                                    onChange={(e) =>
-                                        setEditData({ ...editData, apellido_m: e.target.value })
-                                    }
-                                />
-                            </div>
+            <div>
+              <Label>Apellido Paterno</Label>
+              <Input {...register("apellido_p")} />
+              {errors.apellido_p && (
+                <p className="text-red-500 text-sm">
+                  {errors.apellido_p.message}
+                </p>
+              )}
+            </div>
 
-                            <div>
-                                <Label>Teléfono</Label>
-                                <Input
-                                    value={editData.telefono ?? ""}
-                                    onChange={(e) =>
-                                        setEditData({ ...editData, telefono: e.target.value })
-                                    }
-                                />
-                            </div>
+            <div>
+              <Label>Apellido Materno</Label>
+              <Input {...register("apellido_m")} />
+            </div>
 
-                            <div>
-                                <Label>Email</Label>
-                                <Input
-                                    value={editData.email ?? ""}
-                                    onChange={(e) =>
-                                        setEditData({ ...editData, email: e.target.value })
-                                    }
-                                />
-                            </div>
+            <div>
+              <Label>Teléfono</Label>
+              <Input {...register("telefono")} />
+              {errors.telefono && (
+                <p className="text-red-500 text-sm">
+                  {errors.telefono.message}
+                </p>
+              )}
+            </div>
 
-                            <div>
-                                <Label>Activo</Label>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <Switch checked={editData.activo ?? false} disabled />
-                                    <span>{editData.activo ? "Activo" : "Inactivo"}</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+            <div>
+              <Label>Email</Label>
+              <Input type="email" {...register("email")} />
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email.message}</p>
+              )}
+            </div>
 
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setOpenModal(false)}
-                        >
-                            Cerrar
-                        </Button>
+            <div>
+              <Label>Activo</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <Switch
+                  checked={activoValue}
+                  onCheckedChange={(v) => setValue("activo", v)}
+                />
+                <span>{activoValue ? "Activo" : "Inactivo"}</span>
+              </div>
+            </div>
 
-                        <Button onClick={handleUpdate} disabled={loading}>
-                            {loading ? "Guardando..." : "Guardar cambios"}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </>
-    );
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpenModal(false)}
+              >
+                Cerrar
+              </Button>
+
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Guardando..." : "Guardar cambios"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 }

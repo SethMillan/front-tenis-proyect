@@ -8,7 +8,7 @@ import { Producto } from "@/types/types";
 import { useClientes, useInventario, useMarcas, useTenis } from "@/hooks/useAPI";
 import { createVenta } from "@/lib/api";
 import { mutate } from "swr";
-import { Filter, List, Search } from "lucide-react";
+import { Filter, List, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import PickVariantDialog from "@/components/PickVariantDialog";
 import CheckoutDialog from "@/components/CheckoutDialog";
+import { toast } from "react-toastify";
 
 // las opciones de FuseJS para la busqueda
 const FUSE_OPTIONS = {
@@ -27,22 +28,22 @@ const FUSE_OPTIONS = {
 };
 
 type SaleItem = {
-    productoId: number;
-    inventarioId: number;
-    nombre: string;
-    talla: string;
-    color: string;
-    qty: number;
-    precio: number;
-    url?: string;
-  };
+  productoId: number;
+  inventarioId: number;
+  nombre: string;
+  talla: string;
+  color: string;
+  qty: number;
+  precio: number;
+  url?: string;
+};
 
 const Page = () => {
   //PRIMERO PONEMOS TODOS LOS HOKS
   const { tenis = [], isLoading, isError } = useTenis();
   const { inventario = [] } = useInventario();
   const { marcas = [] } = useMarcas();
-  const { clientes = [] } = useClientes(); 
+  const { clientes = [] } = useClientes();
 
   // LUEGO LOS USESTATE
   const [search, setSearch] = useState("");
@@ -57,13 +58,44 @@ const Page = () => {
   } | null>(null);
 
   // ventas / detalle de venta
-  
+
   const [saleDetails, setSaleDetails] = useState<SaleItem[]>([]);
 
   // modal para elegir talla/color cuando se selecciona un producto
   const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
   const [isPickOpen, setIsPickOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+
+  // usamos cargando como useState porque sin este como que falla el cache, esta raro
+const [cargado, setCargado] = useState(false); 
+
+// aqui vamos a manejar el cache
+useEffect(() => {
+  console.log('Buscando en local storage...');
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('carritoVentas');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        console.log('Carrito recuperado:', parsed);
+        setSaleDetails(parsed);
+      } catch (error) {
+        console.error('Error cargando carrito:', error);
+      }
+    } else {
+      console.log('No hay carrito guardado');
+    }
+  }
+  setCargado(true); // aqui cambiamos el estado de cargando
+}, []);
+
+useEffect(() => {
+  if (cargado && typeof window !== 'undefined') { 
+    console.log('Guardando carrito:', saleDetails);
+    localStorage.setItem('carritoVentas', JSON.stringify(saleDetails));
+  }
+}, [saleDetails, cargado]); // agregamos cargando a las dependencias
+
 
 
 
@@ -94,7 +126,7 @@ const Page = () => {
     let filtered = resultados;
     // podriamos usar esto pero creo que seria mejor si ponemos algo como "producto no disponible" o algo asi
     // mejor si lo usamos para filtrar los productos que no tienen inventario disponible
-    filtered = filtered.filter((item) => item.inventarios.some((inv)=>inv.cantidad>0));
+    filtered = filtered.filter((item) => item.inventarios.some((inv) => inv.cantidad > 0));
     if (selectedMarca) {
       filtered = filtered.filter((item) => item.marcas.id === selectedMarca);
     }
@@ -129,13 +161,25 @@ const Page = () => {
     const inventario = producto?.inventarios?.find(
       (i) => i.id === item.inventarioId
     );
+
     if (!inventario) {
-      alert("Inventario no encontrado");
+      if (!toast.isActive("inventario-not-found")) {
+        toast.error("Inventario no encontrado", {
+          toastId: "inventario-not-found",
+        });
+      }
+
       return;
     }
+
     const alreadyReserved = reservedQtyForInventory(inventario.id);
+
     if (alreadyReserved + item.qty > inventario.cantidad) {
-      alert("No hay suficiente stock para agregar esa cantidad");
+      if (!toast.isActive("stock-insuficiente")) {
+        toast.error("No hay suficiente stock para agregar esa cantidad", {
+          toastId: "stock-insuficiente",
+        });
+      }
       return;
     }
 
@@ -143,17 +187,36 @@ const Page = () => {
       const existIndex = prev.findIndex(
         (p) => p.inventarioId === item.inventarioId
       );
+
       if (existIndex >= 0) {
         const copy = [...prev];
         copy[existIndex] = {
           ...copy[existIndex],
           qty: copy[existIndex].qty + item.qty,
         };
+
+        const updateToastId = `venta-update-${item.inventarioId}`;
+        if (!toast.isActive(updateToastId)) {
+          toast.success("Cantidad actualizada en la venta", {
+            toastId: updateToastId,
+          });
+        }
+
         return copy;
       }
+
+      const addToastId = `venta-add-${item.inventarioId}`;
+      if (!toast.isActive(addToastId)) {
+        toast.success("Producto agregado a la venta", {
+          toastId: addToastId,
+        });
+      }
+
       return [...prev, item];
     });
+
   }
+
 
   function removeSaleItem(inventarioId: number) {
     setSaleDetails((prev) =>
@@ -162,8 +225,8 @@ const Page = () => {
   }
 
   function updateSaleItemQty(inventarioId: number, newQty: number) {
-    // encontrar inventario y validar
     let inv: any = null;
+
     for (const p of tenis) {
       const found = p.inventarios.find((i) => i.id === inventarioId);
       if (found) {
@@ -171,30 +234,63 @@ const Page = () => {
         break;
       }
     }
-    if (!inv) return;
+
+    if (!inv) {
+      if (!toast.isActive("update-inventario-not-found")) {
+        toast.error("Inventario no encontrado", {
+          toastId: "update-inventario-not-found",
+        });
+      }
+      return;
+    }
+
     const reservedExceptThis = saleDetails.reduce(
       (acc, cur) => acc + (cur.inventarioId === inventarioId ? 0 : cur.qty),
       0
     );
+
     if (reservedExceptThis + newQty > inv.cantidad) {
-      alert("No hay suficiente stock para esa cantidad");
+      const toastId = `update-stock-insuficiente-${inventarioId}`;
+
+      if (!toast.isActive(toastId)) {
+        toast.error("No hay suficiente stock para esa cantidad", {
+          toastId,
+        });
+      }
       return;
     }
+
+
     setSaleDetails((prev) =>
       prev.map((it) =>
         it.inventarioId === inventarioId ? { ...it, qty: newQty } : it
       )
     );
+
+    const successToastId = `update-success-${inventarioId}`;
+    if (!toast.isActive(successToastId)) {
+      toast.success("Cantidad actualizada correctamente", {
+        toastId: successToastId,
+      });
+    }
+
   }
+
 
 
   function openCheckout() {
     if (saleDetails.length === 0) {
-      alert("No hay productos para cerrar la venta");
+      if (!toast.isActive("venta-sin-productos")) {
+        toast.error("No hay productos para cerrar la venta", {
+          toastId: "venta-sin-productos",
+        });
+      }
       return;
     }
+
     setShowCheckoutDialog(true);
   }
+
 
   async function closeSale(data: {
     cliente_id: number | null;
@@ -222,34 +318,54 @@ const Page = () => {
 
     try {
       const res = await createVenta(payload);
+
       mutate("/inventario");
       mutate("/productos");
       setSaleDetails([]);
+      localStorage.removeItem('carritoVentas'); // vaciamos el carrito del local storage
+      console.log("Venta creada:", res);
+      console.log("Local storage limpiado");
       setShowPanel(false);
       setShowCheckoutDialog(false);
-      alert(`Venta creada correctamente (id: ${res.id ?? "--"})`);
+
+      toast.success(
+        `Venta creada correctamente (id: ${res?.id ?? "--"})`,
+        {
+          toastId: "venta-success",
+        }
+      );
     } catch (err: any) {
       console.error("Error completo:", err);
-      alert(err.message || "Error al crear la venta");
+
+      toast.error(
+        err?.message || "Error al crear la venta",
+        {
+          toastId: "venta-error",
+        }
+      );
     } finally {
       setIsClosing(false);
     }
   }
 
+
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p>Cargando productos...</p>
+      <div className="flex justify-center items-center py-8 w-full">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <span className="ml-2">Cargando productos...</span>
       </div>
     );
   }
+
   if (isError) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex justify-center items-center py-8 w-full text-red-500">
         <p>Error al cargar los productos</p>
       </div>
     );
   }
+
 
   return (
     <>

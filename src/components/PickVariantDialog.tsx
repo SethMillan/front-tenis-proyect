@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Producto, Inventario } from "@/types/types";
+import { toast } from "react-toastify";
 
 type SaleItem = {
   productoId: number;
@@ -41,7 +42,7 @@ export default function PickVariantDialog({
 }: {
   product: Producto | null;
   open: boolean;
-  reservedForInventory?: number; 
+  reservedForInventory?: number;
   onClose: () => void;
   onAdd: (item: SaleItem) => void;
 }) {
@@ -68,9 +69,14 @@ export default function PickVariantDialog({
     if (!product || !selectedInventory) return;
     if (qty < 1) return;
     if (qty > available) {
-      alert("No hay suficiente stock para esa talla.");
+      if (!toast.isActive("talla-stock-insuficiente")) {
+        toast.error("No hay suficiente stock para esa talla.", {
+          toastId: "talla-stock-insuficiente",
+        });
+      }
       return;
     }
+
     const precio = Number(selectedInventory.precio_venta || 0);
     onAdd({
       productoId: product.id,

@@ -55,7 +55,7 @@ const LoginForm = () => {
         toastId: "login-success",
       });
 
-      router.push("/home");
+      router.push("/nueva-venta");
     } catch (error) {
       toast.error("Error de conexión con el servidor", {
         toastId: "login-connection-error",

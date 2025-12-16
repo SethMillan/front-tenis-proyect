@@ -34,6 +34,7 @@ export default function RootLayout({
       <body className={open_sans.className}>
         <Providers>{children}</Providers>
       </body>
+      
     </html>
 
     

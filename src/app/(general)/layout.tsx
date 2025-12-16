@@ -14,7 +14,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
 
       <ToastContainer
         position="bottom-right"
-        autoClose={4000}
+        autoClose={3000}
         hideProgressBar
         newestOnTop={false}
         closeOnClick

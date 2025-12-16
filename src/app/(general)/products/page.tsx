@@ -1,9 +1,7 @@
 "use client";
 import React , { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-    Table,  TableBody,  TableCell,  TableHead, TableHeader, TableRow,
-} from "@/components/ui/table"
+import {Table,  TableBody,  TableCell,  TableHead, TableHeader, TableRow,} from "@/components/ui/table"
 import { Input } from "@/components/ui/input";
 
 import { useFuseSearch } from "@/hooks/useFuseSearch";
@@ -38,41 +36,119 @@ const page = () => {
     const { marcas } = useMarcas();
     const router = useRouter();
 
-    /* Barra de busqueda */
+    // Barra de busqueda
     const [search, setSearch] = useState("");
 
-    /* Filtros de busqueda */
+    // Filtros de busqueda
     const [filters, setFilters] = useState({
         marca: "",
         color: "",
         categoria: "",
-        minTotal: "",
-        maxTotal: "",
     });
 
-    {/* Orden de los productos */}
+    // Opciones de Orden de los productos
     const [sortConfig, setSortConfig] = useState<{
-        key: keyof Producto | "" | "marcas";
+        key: "" | "id"  | "nombre" | "color" | "marcas.nombre" ;
         direction: "asc" | "desc";
     }>({
         key: "",
         direction: "asc"
     });
 
-    {/* Manejo del Orden */}
-    const handleSort = (key: keyof Producto) => {
+    // Esta función rompe el string "marcas.nombre" y entra nivel por nivel
+    const obtenerValor = (objeto: any, ruta: string) => {
+        // Divide "marcas.nombre" en ["marcas", "nombre"]
+        return ruta.split('.').reduce((obj, clave) => {
+            // Entra al objeto. Si algo es null, no da error.
+            return obj?.[clave]; 
+        }, objeto);
+    };
+
+    // Manejo del Ordenamiento
+    const handleSort = (key: "" | "id" | "nombre" | "color" | "marcas.nombre" ) => {
         setSortConfig(current => ({
             key,
             direction: current.key === key && current.direction === "asc" ? "desc" : "asc"
         }));
     };
+
+    const stockPill = (cantidad: number) => {
+        // Definimos clases base para que se vea como una pastilla
+        const baseClasses = "px-2 py-0.5 rounded-full text-xs font-medium border";
+        
+        if (cantidad > 3) {
+            // Stock saludable (Verde)
+            return (
+                <span className={`${baseClasses} bg-green-100 text-green-800 border-green-200`}>
+                    {cantidad}
+                </span>
+            );
+        } else {
+            // Stock bajo (Rojo)
+            return (
+                <span className={`${baseClasses} bg-red-100 text-red-800 border-red-200`}>
+                    {cantidad}
+                </span>
+            );
+        }
+    };
     
-    const resultados = useFuseSearch(tenis || [], search, FUSE_OPTIONS);
+    const processedProducts = useMemo(() => {
+        if (!tenis) return [];
+
+        let data = [...tenis];
+
+        // Filtrar por búsqueda
+        if (search.trim() !== "") {
+            const term = search.toLowerCase();
+            data = data.filter((product) =>
+                `${product.nombre} ${product.marcas.nombre} ${product.color ?? ""}`
+                    .toLowerCase()
+                    .includes(term)
+            );
+        }
+
+        // Filtros
+        // 1. Filtro por Marca
+        // Verificamos que exista el filtro y que no sea una opción de "ver todas"
+        if (filters.marca && filters.marca !== "none") {
+            data = data.filter((p) => p.marcas.nombre === filters.marca);
+        }
+
+        // 2. Filtro por Color
+        if (filters.color && filters.color !== "none") {
+            data = data.filter((p) => p.color === filters.color);
+        }
+
+        // Ordenar los datos
+        if (sortConfig.key) {
+            data.sort((a, b) => {
+                // 1. Usamos la función obtenerValor para sacar el valor, incluso si está anidado
+                const rawA = obtenerValor(a, sortConfig.key);
+                const rawB = obtenerValor(b, sortConfig.key);
+                
+                // 2. Convertimos a string y minúsculas para comparar
+                const aValue = (rawA ?? "").toString().toLowerCase();
+                const bValue = (rawB ?? "").toString().toLowerCase();
+
+                // 3. Comparación
+                if (aValue < bValue) {
+                    return sortConfig.direction === "asc" ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return sortConfig.direction === "asc" ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+
+        return data;
+    }, [tenis, search, filters, sortConfig]);
 
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center h-screen text-center">
-                <p>Cargando productos...</p>
+            <div className="w-max flex justify-center items-center h-screen text-center">
+                <p className="w-max flex justify-center items-center text-center">Cargando productos...</p>
             </div>
         );
     }
@@ -85,54 +161,6 @@ const page = () => {
         );
     }
     
-    const processedProducts = useMemo(() => {
-        if (!tenis) return [];
-
-        let data = [...tenis];
-
-        // Filtrar por búsqueda
-        if (search.trim() !== "") {
-            const term = search.toLowerCase();
-            data = data.filter((product) =>
-                `${product.nombre} ${product.marca} ${product.color ?? ""}`
-                    .toLowerCase()
-                    .includes(term)
-            );
-        }
-
-        // Filtro por activo/inactivo
-        // 1. Filtro por Marca
-        // Verificamos que exista el filtro y que no sea una opción de "ver todas"
-        if (filters.marca && filters.marca !== "todas") {
-            data = data.filter((p) => p.marca === filters.marca);
-        }
-
-        // 2. Filtro por Color
-        if (filters.color && filters.color !== "todos") {
-            data = data.filter((p) => p.color === filters.color);
-        }
-
-        // Ordenar los datos
-        if (sortConfig.key) {
-            data.sort((a, b) => {
-                // 1. Obtenemos el valor según la llave seleccionada ('nombre', 'marca' o 'color')
-                // Usamos ?? "" por si algún producto no tiene color definido, para que no falle.
-                let aValue = (a[sortConfig.key] ?? "").toString().toLowerCase();
-                let bValue = (b[sortConfig.key] ?? "").toString().toLowerCase();
-
-                // 2. Comparamos
-                if (aValue < bValue) {
-                    return sortConfig.direction === "asc" ? -1 : 1;
-                }
-                if (aValue > bValue) {
-                    return sortConfig.direction === "asc" ? 1 : -1;
-                }
-                return 0;
-            });
-        }
-        return data;
-    }, [tenis, search, filters, sortConfig]);
-
     const handleRowClick = (productId: number) => {
         router.push(`/products/${productId}`);
     };
@@ -212,7 +240,7 @@ const page = () => {
                 <div className="grid gap-4 py-4">
                     <div className="flex flex-col gap-1">
                         <Select
-                            onValueChange={(value) => handleSort(value as keyof Producto)}
+                            onValueChange={(value) => handleSort(value as "id" | "nombre" | "color" | "marcas.nombre")}
                         >
                             <SelectTrigger className="w-[180px] cursor-pointer">
                             <SelectValue placeholder="Ordenar por:" />
@@ -221,7 +249,7 @@ const page = () => {
                             <SelectItem value="none" className="cursor-pointer">Por ID</SelectItem>
                             <SelectItem value="nombre" className="cursor-pointer">Por nombre (A-Z)</SelectItem>
                             <SelectItem value="color" className="cursor-pointer">Por color (A-Z)</SelectItem>
-                            <SelectItem value="marcas" className="cursor-pointer">Por marca (A-Z)</SelectItem>
+                            <SelectItem value="marcas.nombre" className="cursor-pointer">Por marca (A-Z)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -251,10 +279,23 @@ const page = () => {
                                 <TableCell>{product.color}</TableCell>
                                 <TableCell>{product.marcas.nombre}</TableCell>
                                 <TableCell>
-                                    {product.inventarios
-                                        .map((inv: any) => `${inv.talla} (${inv.cantidad})|`)
-                                        .join(", ")
-                                    }
+                                    {/* Usamos un contenedor flex para que las tallas se acomoden automáticamente */}
+                                    <div className="flex flex-wrap gap-2 items-center">
+                                        {product.inventarios.map((inv: any, index: number) => (
+                                            <div 
+                                                key={index} 
+                                                className="flex items-center gap-1 bg-white px-2 py-1 rounded-md border border-gray-100"
+                                            >
+                                                {/* La talla en texto normal */}
+                                                <span className="text-sm text-gray-600 font-semibold">
+                                                    {inv.talla}:
+                                                </span>
+                                                
+                                                {/* Invocamos la función directamente como componente (sin comillas) */}
+                                                {stockPill(inv.cantidad)}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </TableCell>
                                 <TableCell>
                                     {(() => {

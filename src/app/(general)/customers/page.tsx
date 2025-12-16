@@ -6,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { TableCustomers } from "@/components";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Filter, Search } from "lucide-react";
+import { Filter, Loader2, Search } from "lucide-react";
 import { useClientes } from "@/hooks/useAPI";
 
 import {
@@ -94,20 +94,22 @@ export default function PageCustomers() {
     }, [clientes, search, filters, sortConfig]);
 
     if (isLoading) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <p>Cargando clientes...</p>
-            </div>
-        );
-    }
+    return (
+      <div className="flex justify-center items-center py-8 w-full">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <span className="ml-2">Cargando clientes...</span>
+      </div>
+    );
+  }
 
-    if (isError) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <p>Error al cargar clientes</p>
-            </div>
-        );
-    }
+  if (isError) {
+    return (
+      <div className="flex justify-center items-center py-8 w-full text-red-500">
+        <p>Error al cargar los clientes</p>
+      </div>
+    );
+  }
+
 
     return (
         <>
@@ -116,8 +118,8 @@ export default function PageCustomers() {
                     <h1 className="text-2xl font-bold">Clientes</h1>
 
                     <Link href="/customers/create">
-                        <Button className="bg-green-600 hover:bg-green-400">
-                            Agregar Cliente
+                        <Button className="hover:bg-green-200 border-1 border-gray-200 bg-gray-50 text-gray-800">
+                                                        Registrar Cliente
                         </Button>
                     </Link>
                 </div>
